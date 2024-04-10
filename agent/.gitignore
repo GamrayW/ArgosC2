@@ -1,3 +1,4 @@
-.idea
-cmake-build-debug-win
+.idea/
+cmake-build-debug-win/
+System Volume Information/
 
