@@ -1,0 +1,15 @@
+version: "3.7"
+
+
+services:
+  db:
+    image: postgres
+    container_name: argos_db
+    environment:
+      POSTGRES_USER: "argos"
+      POSTGRES_DB: "argos_db"
+      POSTGRES_PASSWORD: "changeme"
+    ports:
+      - 5432:5432
+    volumes:
+      - ./argos-data:/var/lib/postgresql/data
