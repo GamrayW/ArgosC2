@@ -1,0 +1,1 @@
+x86_64-w64-mingw32-gcc -std=c11 -o agent.exe main.c rc4.c -lwsock32 -lws2_32

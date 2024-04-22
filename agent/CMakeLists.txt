@@ -3,6 +3,8 @@ project(agent C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(agent main.c)
+add_executable(agent main.c
+        rc4.c
+        rc4.h)
 target_link_libraries(agent wsock32 ws2_32)
 

