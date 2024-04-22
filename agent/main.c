@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <winsock2.h>
 #include <windows.h>
-#include "./rc4.h"
 
 
 #define LEN_MSG 256

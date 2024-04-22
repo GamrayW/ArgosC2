@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <title>Tableau de Bord</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <!-- Liens vers les bibliothèques de glisser-déposer -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </head>
 <body>
     <nav id="top-bar">
-        <button id="payload-btn">Payload</button>
-        <button id="help-btn">Help</button>
+        <div id="nav-buttons">
+            <button id="payload-btn">Payload</button>
+            <button id="help-btn">Help</button>
+        </div>
+        <button id="logout-btn" onclick="location.href='/logout'">Déconnexion</button>
     </nav>
 
     <div id="targets-panel" class="draggable-container">
@@ -24,8 +26,8 @@
             <thead>
                 <tr>
                     <th>IP</th>
-                    <th>Port</th>
-                    <th>Status</th>
+                    <th>Display Name</th>
+                    <th>Last Hearbeat</th>
                 </tr>
             </thead>
             <tbody>
@@ -35,12 +37,8 @@
     </div>
 
     <div id="command-terminal">
-        <textarea id="command-input"></textarea>
+        <div id="command-input" contenteditable></div>
         <button id="send-command-btn">Envoyer Commande</button>
-    </div>
-
-    <div id="logout-section">
-        <a href="/logout">Déconnexion</a>
-    </div>
+    </div>    
 </body>
 </html>

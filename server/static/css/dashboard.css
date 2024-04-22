@@ -1,0 +1,141 @@
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: 'Open Sans', sans-serif;
+    background: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
+    color: white; 
+}
+
+#top-bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#nav-buttons {
+    display: flex;
+}
+
+#top-bar button {
+    background: none;
+    border: 2px solid white;
+    border-radius: 5px;
+    padding: 0.5rem 1rem;
+    color: white;
+    margin-right: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+#top-bar button:last-child {
+    margin-right: 0;
+}
+
+#top-bar button:hover {
+    background-color: white;
+    color: #6a11cb;
+}
+
+#logout-btn {
+    margin-left: auto;
+}
+
+.draggable-container {
+    min-height: 150px;
+    padding: 1rem;
+    border: 2px dashed white;
+    margin: 1rem;
+    border-radius: 10px;
+}
+
+#targets-list {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    margin: 1rem;
+    padding: 1rem;
+}
+
+#targets-list table {
+    width: 100%;
+    border-collapse: collapse; 
+}
+
+#targets-list th,
+#targets-list td {
+    text-align: left;
+    padding: 0.5rem;
+    border-bottom: 1px solid white; 
+}
+
+#command-terminal {
+    position: relative;
+    margin: 1rem;
+}
+
+#command-input {
+    width: calc(100% - 2rem);
+    min-height: 150px;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: monospace;
+    margin-bottom: 1rem;
+    overflow-y: auto;
+}
+
+#command-input:focus {
+    outline: none;
+}
+
+#send-command-btn {
+    width: 100%;
+    padding: 1rem;
+    background-color: #6a11cb;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#send-command-btn:hover {
+    background-color: #2575fc;
+}
+
+#logout-section a {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    display: inline-block; 
+    margin: 1rem;
+    transition: background-color 0.3s;
+}
+
+#logout-section a:hover {
+    background-color: #6a11cb;
+    border-radius: 5px;
+}
+
+
+
+.target {
+    cursor: pointer;
+
+}
+
+.target:hover {
+
+    background-color: #6a11cb;
+    color: white;
+}
+
+
+
+
+@media (min-width: 768px) {
+    
+}

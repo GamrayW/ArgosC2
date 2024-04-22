@@ -36,6 +36,7 @@ def create_tables():
         id SERIAL PRIMARY KEY,
         display_name VARCHAR,
         ip_addr VARCHAR,
+        heartbeat INTEGER,
         last_command INTEGER
     );""")
 
@@ -77,7 +78,7 @@ def init():
 def get_user(login):
     """
     Retrieve a user from it's login
-    :param login: the login, no shit
+    :param login str: the login, no shit
     """
     user = connection.execute("SELECT * FROM Users WHERE login=%s;", (login,)).fetchone()
     if user is None:
@@ -88,6 +89,33 @@ def get_user(login):
         "login": user[1],
         "password": user[2]
     }
+
+
+def get_user_by_id(user_id):
+    """
+    Retrieve a user from it's id
+    :param id int: the id
+    """
+    user = connection.execute("SELECT * FROM Users WHERE id=%s;", (user_id,)).fetchone()
+    if user is None:
+        return None
+
+    return {
+        "id": user[0],
+        "login": user[1],
+        "password": user[2]
+    }
+
+
+def get_user_id(login):
+    """
+    Get the user id from the specified username
+    :param login str: the username of the user
+    """
+    user = connection.execute("SELECT id FROM Users WHERE login=%s;", (login,)).fetchone()
+    if user is None:
+        return None
+    return user[0]
 
 
 def register_user(login, password):
@@ -124,6 +152,44 @@ def check_credentials(login, password):
 
 
 # Targets functions
+def get_all_targets():
+    """
+    Retrieve all the targets
+    :return [dict]: the list of target dict object (see db schema)
+    """
+    targets = connection.execute("SELECT * FROM Targets").fetchall()
+    result = []
+    for target in targets:
+        result.append({
+            "id": target[0],
+            "display_name": target[1],
+            "ip_addr": target[2],
+            "heartbeat": target[3],
+            "last_command_id": target[4]
+        })
+    
+    return result
+
+
+def get_target_by_id(target_id):
+    """
+    Retrieve a target from it's id
+    :param target_id int: the id of the target
+    :return dict: the target dict object (see db schema)
+    """
+    target = connection.execute("SELECT * FROM Targets WHERE id=%s;", (target_id,)).fetchone()
+    if target is None:
+        return None
+
+    return {
+        "id": target[0],
+        "display_name": target[1],
+        "ip_addr": target[2],
+        "heartbeat": target[3],
+        "last_command_id": target[4]
+    }
+
+
 def get_target_by_name(name):
     """
     Retrieve a target from it's display name
@@ -138,6 +204,7 @@ def get_target_by_name(name):
         "id": target[0],
         "display_name": target[1],
         "ip_addr": target[2],
+        "heartbeat": target[3],
         "last_command_id": target[3]
     }
 
@@ -158,6 +225,7 @@ def get_targets_by_ip(ip_addr):
                 "id": target[0],
                 "display_name": target[1],
                 "ip_addr": target[2],
+                "heartbeat": target[3],
                 "last_command_id": target[3]
             })
     return result
@@ -173,36 +241,79 @@ def add_new_target(display_name, ip_addr):
     if get_target_by_name(display_name) is not None:
         return False
 
-    connection.execute("INSERT INTO Targets(display_name, ip_addr) VALUES (%s, %s);", (display_name, ip_addr))
+    timestamp = int(datetime.now().timestamp())
+
+    connection.execute("INSERT INTO Targets(display_name, ip_addr, heartbeat) VALUES (%s, %s, %s);", (display_name, ip_addr, timestamp))
     connection.commit()
     return True
 
 
 # Commands function
-def get_command_history_of_target(display_name):
+def get_user_last_command_on_target(target_id, user_id):
     """
-    Get the history of commands of a target
-    :param display_name str: the name of the target
+    Get the last command the specified user sent to the target
+    :param target_id int: id of target
+    :param user_id int: id of user
+    :return dict: the command dict object (see db schema)
+    """
+    last_command = connection.execute("SELECT * FROM Commands WHERE executed_on = %s\
+                                   AND owner = %s;", (target_id, user_id)).fetchone()
+    if last_command == None:
+        return None
+
+    return {
+        'id': last_command[0],
+        'owner': last_command[1],
+        'executed_on': last_command[2],
+        'completed': last_command[3],
+        'command': last_command[4],
+        'response': last_command[5],
+        'executed_at': last_command[6],
+    }
+
+def get_user_command_history_of_target(target_id, user_id):
+    """
+    Get the history of a user commands on target
+    :param target_id int: the id of the target
+    :param user_id int: the id of the user
     :return [dict]: the list of command dict object (see db schema)
     """
-    target_id = get_target_by_name(display_name)["id"]
+    commands = connection.execute("SELECT * FROM Commands WHERE executed_on = %s\
+                                   AND owner = %s ORDER BY executed_at ASC;", (target_id, user_id)).fetchall()
 
+    result = []
+    for command in commands: 
+        result.append({
+                'id': command[0],
+                'owner': command[1],
+                'executed_on': command[2],
+                'completed': command[3],
+                'command': command[4],
+                'response': command[5],
+                'executed_at': command[6],
+        })
+    return result
+
+
+def get_full_command_history_of_target(target_id):
+    """
+    Get the history of commands of a target
+    :param target_id int: the id of the target
+    :return [dict]: the list of command dict object (see db schema)
+    """
     commands = connection.execute("SELECT * FROM Commands WHERE executed_on = %s\
                                    ORDER BY executed_at ASC;", (target_id,)).fetchall()
 
     return commands
 
 
-def add_new_command(command, target_name, user_name):
+def add_new_command(command, target_id, user_id):
     """
     Create a new command linked with User and Target.
     :param command str: the command itself
-    :param target_name str: the display_name of the Target
-    :param user_name str: the login of the User
+    :param target_id int: the id of the target
+    :param user_id int: the id of the user
     """
-    user_id = get_user(user_name)["id"]
-    target_id = get_target_by_name(target_name)["id"]
-
     timestamp = int(datetime.now().timestamp())
 
     connection.execute("""\
@@ -214,7 +325,7 @@ def add_new_command(command, target_name, user_name):
 
 
 if __name__ == "__main__":
-    print("----------Whiping db-----------")
+    print("----------Wiping db-----------")
     connection.execute("DROP TABLE IF EXISTS Users")
     connection.execute("DROP TABLE IF EXISTS Targets")
     connection.execute("DROP TABLE IF EXISTS Commands")
@@ -242,6 +353,12 @@ if __name__ == "__main__":
     print(connection.execute("SELECT * FROM Targets").fetchall())
 
     print("----------Testing Commands-----------")
-    add_new_command("ls /", "test_device", "John")
+    add_new_command("ls /", 1, 1)
     print(connection.execute("SELECT * FROM Commands").fetchall())
-    print(get_command_history_of_target("test_device"))
+    print(get_user_last_command_on_target(1, 1))
+
+    print("----------Wiping db-----------")
+    connection.execute("DROP TABLE IF EXISTS Users")
+    connection.execute("DROP TABLE IF EXISTS Targets")
+    connection.execute("DROP TABLE IF EXISTS Commands")
+    connection.commit()
