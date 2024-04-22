@@ -22,7 +22,6 @@ import argosdb
 
 APP_SECRET_KEY = 'une_cle_secrete_très_sécurisée'
 
-
 app = Flask(__name__)
 app.secret_key = APP_SECRET_KEY
 
@@ -33,8 +32,9 @@ login_manager.session_protection = "strong"
 
 
 class ArgosUser(UserMixin):
-    def __init__(self, user_id):
+    def __init__(self, user_id,):
         user_data = argosdb.get_user_by_id(user_id)
+      
         if user_data is None:
             self.id = -1
             return
@@ -47,6 +47,7 @@ class ArgosUser(UserMixin):
 @login_manager.user_loader
 def load_user(user_id):
     user = ArgosUser(user_id)
+
     if user.id == -1:
         return None
     return user
@@ -59,14 +60,14 @@ def login():
     Handle the login process, check user credentials and set session.
     :return: Redirection or Login template
     """
-    if current_user:
+    if current_user is ArgosUser:
         return redirect(url_for('dashboard'))
     
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         if argosdb.check_credentials(username, password):
-            user = ArgosUser(argosdb.get_user_id(username))
+            user = ArgosUser(argosdb.get_user(username)['id'])
             login_user(user)
             return redirect(url_for('dashboard'))
         else:
@@ -92,7 +93,7 @@ def logout():
     :return: Redirection to login
     """
     logout_user()
-    return redirect(url_for('login'))
+    return redirect(url_for('/'))
 
 
 if __name__ == '__main__':
@@ -108,11 +109,22 @@ if __name__ == '__main__':
         print(f"Test user '{test_username}' already exists.")
 
     print("Adding test targets")
-    argosdb.add_new_target("test_device", "127.0.0.1")
-    argosdb.add_new_target("esteban_pc", "41.56.235.12")
-    argosdb.add_new_target("thomas_pc", "192.168.56.1")
-    argosdb.add_new_target("nsa_operator😎", "256.0.0.1")
+    argosdb.add_new_target("test_device", "127.0.0.1", 1)
+    argosdb.add_new_target("esteban_pc", "41.56.235.12", 1)
+    argosdb.add_new_target("thomas_pc", "192.168.56.1", 1)
+    argosdb.add_new_target("nsa_operator😎", "256.0.0.1", 1)
 
     print("Adding last command")
+    # argosdb.add_new_command("echo 'h4ck3rz'", 1, 1)
+    # argosdb.add_new_command("echo 'test'", 2, 1)
     # argosdb.add_new_command("echo 'h4ck3rz'", 4, 1)
+    # argosdb.add_new_command("echo 'h4ck3rz'", 4, 1)
+    # argosdb.add_new_command("ls /", 4, 1)
+
+    print("Adding the listener")
+    if argosdb.add_listener("test_listener", "123456789"):
+     print(f"Test listener created successfully!")
+    else:
+        print(f"Test listner already exists.")
+
     app.run(debug=True)

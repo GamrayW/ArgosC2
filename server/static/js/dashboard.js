@@ -1,4 +1,7 @@
 $(document).ready(function() {
+
+    var currentTargetId = null;
+
     function loadTargets() {
         $.ajax({
             url: '/api/v1/targets',
@@ -16,10 +19,24 @@ $(document).ready(function() {
 
     function updateTargetsPanel(targets) {
         var targetsPanel = $('#targets-panel');
-        targetsPanel.empty(); 
+        targetsPanel.empty();
 
         $.each(targets, function(index, target) {
-            var targetElement = $('<div>', {class: 'target', text: target.display_name});
+            var targetElement = $('<div>', {
+                class: 'target',
+                'data-id': target.id,
+                'data-display-name': target.display_name,
+                'data-ip': target.ip_addr,
+                text: target.display_name,
+                click: function() {
+                    currentTargetId = target.id;
+
+                    loadCommandHistory(target.id);
+
+                    var newPrompt = `${target.display_name}@${target.ip_addr} $ `;
+                    $('#command-prompt').text(newPrompt);
+                }
+            });
             targetsPanel.append(targetElement);
         });
     }
@@ -28,28 +45,17 @@ $(document).ready(function() {
         var targetsListBody = $('#targets-list tbody');
         targetsListBody.empty(); 
 
+        let currentTime = Math.floor(Date.now() / 1000);
+
         $.each(targets, function(index, target) {
+            let elapsed = currentTime - target.heartbeat
+            
             var row = $('<tr>').append(
                 $('<td>').text(target.ip_addr),
                 $('<td>').text(target.display_name),
-                $('<td>').text(target.heartbeat) 
+                $('<td>').text(`${elapsed}s ago`) 
             );
             targetsListBody.append(row);
-        });
-    }
-
-
-    function updateTargetsPanel(targets) {
-        var targetsPanel = $('#targets-panel');
-        targetsPanel.empty(); 
-
-        $.each(targets, function(index, target) {
-            var targetElement = $('<div>', {
-                class: 'target',
-                text: target.display_name,
-                click: function() { loadCommandHistory(target.id); } 
-            });
-            targetsPanel.append(targetElement);
         });
     }
 
@@ -93,7 +99,56 @@ $(document).ready(function() {
             commandInput.append(commandText);
         });
     }
+
+    function focusNewCommandPrompt() {
+        var newCommandPrompt = $('#new-command-prompt');
+        if (newCommandPrompt.length) {
+            var div = newCommandPrompt.get(0);
+            var textRange = document.createRange();
+            textRange.selectNodeContents(div);
+            textRange.collapse(false);
+            var selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(textRange);
+        }
+    }
     
+    $('#send-command-btn').click(function() {
+        var command = $('#new-command-prompt').text().trim();
+        if (!command || currentTargetId === null) {
+            alert('Veuillez sélectionner une cible et entrer une commande.');
+            return;
+        }
+    
+        sendCommandToTarget(command, currentTargetId);
+    });
+    
+    function sendCommandToTarget(command, targetId) {
+        $.ajax({
+            url: '/api/v1/send_command/' + targetId,
+            type: 'POST',
+            dataType: 'json',
+            data: { cmd: command },
+            success: function(response) {
+                if (response.success) {
+                    var currentTarget = $('.target[data-id="' + targetId + '"]');
+                    var hostname = currentTarget.data('display-name');
+                    var ip = currentTarget.data('ip');
+                    $('#command-history').append(`<div>${hostname}@${ip} $ ${command}</div>`);
+    
+                    $('#new-command-prompt').empty();
+    
+                    focusNewCommandPrompt();
+                } else {
+                    alert('Erreur : ' + response.msg);
+                }
+            },
+            error: function(xhr, status, error) {
+                alert('Erreur lors de l\'envoi de la commande : ' + error);
+            }
+        });
+    }
+
 
     loadTargets();
 });

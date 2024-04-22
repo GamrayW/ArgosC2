@@ -32,8 +32,17 @@ def create_tables():
     );""")
 
     connection.execute("""\
+    CREATE TABLE Listeners (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR,
+        heartbeat INTEGER,
+        api_key VARCHAR
+    );""")
+
+    connection.execute("""\
     CREATE TABLE Targets (
         id SERIAL PRIMARY KEY,
+        listener INTEGER,
         display_name VARCHAR,
         ip_addr VARCHAR,
         heartbeat INTEGER,
@@ -52,6 +61,47 @@ def create_tables():
     );""")
 
     connection.commit()
+
+
+# Utils funcs
+def parse_user(user_data):
+    return {
+        "id": user_data[0],
+        "login": user_data[1],
+        "password": user_data[2]
+    }
+
+
+def parse_listener(listener_data):
+    return {
+        'id': listener_data[0],
+        'name': listener_data[1],
+        'heartbeat': listener_data[2],
+        # we don't provide the api-key
+    }
+
+
+def parse_targets(target_data):
+    return {
+        'id': target_data[0],
+        'listener': target_data[1],
+        'display_name': target_data[2],
+        'ip_addr': target_data[3],
+        'heartbeat': target_data[4],
+        'last_command_id': target_data[5]
+    }
+
+
+def parse_command(command_data):
+    return {
+        'id': command_data[0],
+        'owner': command_data[1],
+        'executed_on': command_data[2],
+        'completed': command_data[3],
+        'command': command_data[4],
+        'response': command_data[5],
+        'executed_at': command_data[6],
+    }
 
 
 def get_tables():
@@ -84,11 +134,7 @@ def get_user(login):
     if user is None:
         return None
 
-    return {
-        "id": user[0],
-        "login": user[1],
-        "password": user[2]
-    }
+    return parse_user(user)
 
 
 def get_user_by_id(user_id):
@@ -100,22 +146,7 @@ def get_user_by_id(user_id):
     if user is None:
         return None
 
-    return {
-        "id": user[0],
-        "login": user[1],
-        "password": user[2]
-    }
-
-
-def get_user_id(login):
-    """
-    Get the user id from the specified username
-    :param login str: the username of the user
-    """
-    user = connection.execute("SELECT id FROM Users WHERE login=%s;", (login,)).fetchone()
-    if user is None:
-        return None
-    return user[0]
+    return parse_user(user)
 
 
 def register_user(login, password):
@@ -151,6 +182,60 @@ def check_credentials(login, password):
     return password == user['password']
 
 
+# Listeners functions
+def get_listener(name):
+    """
+    Get the listener id from the specified name
+    :param name str: the name of the listener
+    """
+    listener = connection.execute("SELECT id FROM Listeners WHERE name=%s;", (name,)).fetchone()
+    if listener is None:
+        return None
+    return listener[0]
+
+
+def auth_listener(api_key):
+    """
+    Check if the provided api_key is from a listener, and
+    returns it if so.
+    :param api_key str: the api key provided
+    :return dict: the listener dict object (see db schema)
+    """
+    api_key_hash = hashlib.sha512(api_key.encode()).hexdigest()
+
+    listener = connection.execute("SELECT * FROM Listeners WHERE api_key = %s", (api_key_hash,)).fetchone()
+    if listener is None:
+        return None
+    return parse_listener(listener)
+
+
+def add_listener(name, api_key):
+    """
+    Add a new listener to the database.
+    :param name str: the unique name used to identify the listener
+    :param api_key str: the clear text api key used to authentificate the listener
+    """
+    api_key_hash = hashlib.sha512(api_key.encode()).hexdigest()
+    user = get_listener(name)
+    if user is not None:
+        return False
+
+    connection.execute("INSERT INTO Listeners(name, api_key) VALUES (%s, %s);", (name, api_key_hash))
+    connection.commit()
+    return True
+
+
+def update_heartbeat_listener(listener_id):
+    """
+    Change the heartbeat timestamp of the listener to current time
+    :param listener_id int: the id of the listener
+    """
+    timestamp = int(datetime.now().timestamp())
+
+    connection.execute("UPDATE Listeners SET heartbeat = %s WHERE id = %s", (timestamp, listener_id))
+    connection.commit()
+
+
 # Targets functions
 def get_all_targets():
     """
@@ -160,13 +245,7 @@ def get_all_targets():
     targets = connection.execute("SELECT * FROM Targets").fetchall()
     result = []
     for target in targets:
-        result.append({
-            "id": target[0],
-            "display_name": target[1],
-            "ip_addr": target[2],
-            "heartbeat": target[3],
-            "last_command_id": target[4]
-        })
+        result.append(parse_targets(target))
     
     return result
 
@@ -181,13 +260,7 @@ def get_target_by_id(target_id):
     if target is None:
         return None
 
-    return {
-        "id": target[0],
-        "display_name": target[1],
-        "ip_addr": target[2],
-        "heartbeat": target[3],
-        "last_command_id": target[4]
-    }
+    return parse_targets(target)
 
 
 def get_target_by_name(name):
@@ -200,13 +273,7 @@ def get_target_by_name(name):
     if target is None:
         return None
 
-    return {
-        "id": target[0],
-        "display_name": target[1],
-        "ip_addr": target[2],
-        "heartbeat": target[3],
-        "last_command_id": target[3]
-    }
+    return parse_targets(target)
 
 
 def get_targets_by_ip(ip_addr):
@@ -221,21 +288,16 @@ def get_targets_by_ip(ip_addr):
 
     result = []
     for target in targets: 
-        result.append({
-                "id": target[0],
-                "display_name": target[1],
-                "ip_addr": target[2],
-                "heartbeat": target[3],
-                "last_command_id": target[3]
-            })
+        result.append(parse_targets(target))
     return result
 
 
-def add_new_target(display_name, ip_addr):
+def add_new_target(display_name, ip_addr, listener_id):
     """
     Add a new target, checks for display name uniqueness
     :param display_name str: the unique display name to identify the target 
     :param ip_addr str: the ip address of the target
+    :param listener_id str: the id of the lister that owns this target
     :return bool: false if there's already a target using display name, true if success
     """
     if get_target_by_name(display_name) is not None:
@@ -243,9 +305,21 @@ def add_new_target(display_name, ip_addr):
 
     timestamp = int(datetime.now().timestamp())
 
-    connection.execute("INSERT INTO Targets(display_name, ip_addr, heartbeat) VALUES (%s, %s, %s);", (display_name, ip_addr, timestamp))
+    connection.execute("INSERT INTO Targets(listener, display_name, ip_addr, heartbeat) \
+                       VALUES (%s, %s, %s, %s);", (listener_id, display_name, ip_addr, timestamp))
     connection.commit()
     return True
+
+
+def update_heartbeat_target(target_id):
+    """
+    Change the heartbeat timestamp of the target to current time
+    :param target_id int: the id of the target
+    """
+    timestamp = int(datetime.now().timestamp())
+
+    connection.execute("UPDATE Targets SET heartbeat = %s WHERE id = %s", (timestamp, target_id))
+    connection.commit()
 
 
 # Commands function
@@ -261,15 +335,8 @@ def get_user_last_command_on_target(target_id, user_id):
     if last_command == None:
         return None
 
-    return {
-        'id': last_command[0],
-        'owner': last_command[1],
-        'executed_on': last_command[2],
-        'completed': last_command[3],
-        'command': last_command[4],
-        'response': last_command[5],
-        'executed_at': last_command[6],
-    }
+    return parse_command(last_command)
+
 
 def get_user_command_history_of_target(target_id, user_id):
     """
@@ -283,28 +350,23 @@ def get_user_command_history_of_target(target_id, user_id):
 
     result = []
     for command in commands: 
-        result.append({
-                'id': command[0],
-                'owner': command[1],
-                'executed_on': command[2],
-                'completed': command[3],
-                'command': command[4],
-                'response': command[5],
-                'executed_at': command[6],
-        })
+        result.append(parse_command(command))
     return result
 
 
-def get_full_command_history_of_target(target_id):
+def get_all_active_commands_for_listener(listener_id):
     """
-    Get the history of commands of a target
-    :param target_id int: the id of the target
-    :return [dict]: the list of command dict object (see db schema)
+    Get all active commands for a specified listener, regardless of the target
+    :param listener_id int: the id of the listener
     """
-    commands = connection.execute("SELECT * FROM Commands WHERE executed_on = %s\
-                                   ORDER BY executed_at ASC;", (target_id,)).fetchall()
-
-    return commands
+    commands = connection.execute("SELECT c.* FROM Commands c \
+                                   JOIN Targets t\
+                                   ON c.executed_on = t.id \
+                                   AND NOT c.completed;",).fetchall()
+    result = []
+    for command in commands: 
+        result.append(parse_command(command))
+    return result
 
 
 def add_new_command(command, target_id, user_id):
@@ -327,6 +389,7 @@ def add_new_command(command, target_id, user_id):
 if __name__ == "__main__":
     print("----------Wiping db-----------")
     connection.execute("DROP TABLE IF EXISTS Users")
+    connection.execute("DROP TABLE IF EXISTS Listeners")
     connection.execute("DROP TABLE IF EXISTS Targets")
     connection.execute("DROP TABLE IF EXISTS Commands")
     connection.commit()
@@ -345,7 +408,7 @@ if __name__ == "__main__":
     print(connection.execute("SELECT * FROM Users;").fetchall())
 
     print("----------Testing Targets-----------")
-    if not add_new_target("test_device", "127.0.0.1"):
+    if not add_new_target("test_device", "127.0.0.1", 1):
         print("test_device already registered")
 
     print(get_target_by_name("test_device"))
@@ -359,6 +422,7 @@ if __name__ == "__main__":
 
     print("----------Wiping db-----------")
     connection.execute("DROP TABLE IF EXISTS Users")
+    connection.execute("DROP TABLE IF EXISTS Listeners")
     connection.execute("DROP TABLE IF EXISTS Targets")
     connection.execute("DROP TABLE IF EXISTS Commands")
     connection.commit()
