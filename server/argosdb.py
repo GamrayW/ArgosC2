@@ -1,3 +1,4 @@
+# TODO make db errors
 import psycopg
 import hashlib
 from datetime import datetime
@@ -276,6 +277,20 @@ def get_target_by_name(name):
     return parse_targets(target)
 
 
+def get_target_from_command_id(command_id):
+    """
+    Retrieve a target from a command id
+    :param command_id: the id of the command
+    :return dict: the target dict object (see db schema)
+    """
+    target = connection.execute("SELECT t.* FROM Targets t JOIN Commands c \
+                                ON t.id = c.executed_on WHERE c.id = %s", (command_id,)).fetchone()
+    if target is None:
+        return None
+
+    return parse_targets(target)
+
+
 def get_targets_by_ip(ip_addr):
     """
     Retrieve the target(s) using the ip
@@ -298,17 +313,18 @@ def add_new_target(display_name, ip_addr, listener_id):
     :param display_name str: the unique display name to identify the target 
     :param ip_addr str: the ip address of the target
     :param listener_id str: the id of the lister that owns this target
-    :return bool: false if there's already a target using display name, true if success
+    :return int: the id of the new target
     """
-    if get_target_by_name(display_name) is not None:
-        return False
-
     timestamp = int(datetime.now().timestamp())
 
-    connection.execute("INSERT INTO Targets(listener, display_name, ip_addr, heartbeat) \
-                       VALUES (%s, %s, %s, %s);", (listener_id, display_name, ip_addr, timestamp))
+    target_id = connection.execute("INSERT INTO Targets(listener, display_name, ip_addr, heartbeat) \
+                       VALUES (%s, %s, %s, %s) RETURNING id;", (listener_id, display_name, ip_addr, timestamp)).fetchone()
     connection.commit()
-    return True
+
+    if len(target_id) != 1:
+        return -1
+    
+    return target_id[0]
 
 
 def update_heartbeat_target(target_id):
@@ -367,6 +383,23 @@ def get_all_active_commands_for_listener(listener_id):
     for command in commands: 
         result.append(parse_command(command))
     return result
+
+
+def set_command_output(command_id, output):
+    """
+    Set the command response and make it completed
+    :param command_id int: the id of the command
+    :param output str: the output itself
+    :return int: err code
+    """
+    is_already_complete = connection.execute("SELECT * FROM Commands WHERE id = %s AND completed", (command_id,)).fetchone()
+    print(is_already_complete)
+    if is_already_complete is not None:
+        return -1
+    
+    connection.execute("UPDATE Commands SET response = %s, completed = TRUE WHERE id = %s", (output, command_id))
+    connection.commit()
+    return 0
 
 
 def add_new_command(command, target_id, user_id):

@@ -109,17 +109,22 @@ if __name__ == '__main__':
         print(f"Test user '{test_username}' already exists.")
 
     print("Adding test targets")
-    argosdb.add_new_target("test_device", "127.0.0.1", 1)
-    argosdb.add_new_target("esteban_pc", "41.56.235.12", 1)
-    argosdb.add_new_target("thomas_pc", "192.168.56.1", 1)
-    argosdb.add_new_target("nsa_operator😎", "256.0.0.1", 1)
+    if argosdb.get_target_by_name('test_device') is None:
+        argosdb.add_new_target("test_device", "127.0.0.1", 1)
+        argosdb.add_new_target("esteban_pc", "41.56.235.12", 1)
+        argosdb.add_new_target("thomas_pc", "192.168.56.1", 1)
+        argosdb.add_new_target("nsa_operator😎", "256.0.0.1", 1)
 
-    print("Adding last command")
-    # argosdb.add_new_command("echo 'h4ck3rz'", 1, 1)
-    # argosdb.add_new_command("echo 'test'", 2, 1)
-    # argosdb.add_new_command("echo 'h4ck3rz'", 4, 1)
-    # argosdb.add_new_command("echo 'h4ck3rz'", 4, 1)
-    # argosdb.add_new_command("ls /", 4, 1)
+        print("Adding last command")
+        argosdb.add_new_command("echo 'h4ck3rz'", 1, 1)
+        argosdb.add_new_command("echo 'test'", 2, 1)
+        argosdb.add_new_command("echo 'h4ck3rz'", 4, 1)
+        argosdb.add_new_command("echo 'h4ck3rz'", 4, 1)
+        argosdb.add_new_command("ls /", 4, 1)
+
+        print("Adding fake output")
+        output = __import__("os").popen("ls /").read()
+        argosdb.set_command_output(5, output)
 
     print("Adding the listener")
     if argosdb.add_listener("test_listener", "123456789"):

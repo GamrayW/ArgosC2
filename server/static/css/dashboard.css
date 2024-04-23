@@ -1,3 +1,6 @@
+/* ... TODO , cacher la barre ... */
+
+
 body, html {
     height: 100%;
     margin: 0;
@@ -13,6 +16,10 @@ body, html {
     background: rgba(0, 0, 0, 0.2);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+.example::-webkit-scrollbar {
+    display: none;
+  }
 
 #nav-buttons {
     display: flex;
@@ -71,21 +78,62 @@ body, html {
 
 #command-terminal {
     position: relative;
-    margin: 1rem;
+    margin: 1rem 1rem 2rem 1rem;  /* Marges pour top, right, bottom, et left */
+    padding: 1rem;
+    
 }
 
-#command-input {
-    width: calc(100% - 2rem);
-    min-height: 150px;
-    padding: 1rem;
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
-    border: none;
+
+#active-shell {
+    color: #fff; /* Texte blanc pour contraste */
+    font-family: 'Courier New', Courier, monospace; /* Police typique de terminal */
     border-radius: 10px;
-    font-family: monospace;
-    margin-bottom: 1rem;
-    overflow-y: auto;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent pour correspondre à votre style */
 }
+
+#shell-target {
+    white-space: nowrap; /* Empêcher le prompt de retourner à la ligne */
+}
+
+#shell-input {
+    all: unset; /* Supprimer les styles par défaut pour l'élément éditable */
+    width: 80%;  /* Assurez-vous que la largeur est suffisante */
+    min-height: 1.5em;  /* Hauteur minimale pour faciliter le clic */
+    padding: 8px;  /* Padding suffisant pour l'interaction */
+    padding-right: 80%;
+    color: white;
+    outline: none;  /* Supprimer l'outline lors de la sélection */
+    cursor: text;  /* Indiquer visuellement que l'élément est éditable */
+}
+
+
+#shell-input:focus {
+    outline: none; /* Pas de contour lors de la sélection */
+}
+
+
+
+#command-history {
+    width: calc(100% - 2rem);  /* Largeur ajustée pour tenir compte des marges */
+    height: 150px;             /* Hauteur fixe pour le conteneur d'historique */
+    max-height: 300px;         /* Hauteur maximale identique à la hauteur fixe */
+    padding: 1rem;             /* Espace interne pour l'esthétique */
+    background: rgba(0, 0, 0, 0.5);  /* Couleur de fond avec transparence */
+    color: white;              /* Couleur de texte pour contraste */
+    border: none;              /* Pas de bordure */
+    border-radius: 10px;       /* Bords arrondis */
+    font-family: monospace;    /* Style de police pour l'affichage du texte de commande */
+    margin-bottom: 1rem;       /* Marge en bas pour séparation */
+    overflow-y: auto;          /* Défilement vertical activé lorsque nécessaire */
+}
+
+.command-response {
+    color: #bada55; 
+    margin-left: 20px; 
+    font-style: italic; 
+}
+
 
 #command-input:focus {
     outline: none;

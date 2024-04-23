@@ -1,0 +1,17 @@
+server:
+  host: "0.0.0.0"
+  port: 40056
+
+build_config:
+  compiler64: "/path/to/x86_64_compiler"
+  compiler32: "/path/to/x86_compiler"
+  nasm: "/path/to/nasm"
+
+operators:
+  - username: "admin"
+    password: "encrypted_password"
+
+logging:
+  enable_logging: true
+  log_file: "path/to/logfile.log"
+  log_level: "INFO"  # PEUT ETRE DES TRUCS DU STYLE 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'
