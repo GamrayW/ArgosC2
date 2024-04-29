@@ -24,7 +24,16 @@ def argos_create_new_target(target_data):
     return new_target['data']['id']
 
 
-def get_job_for_target(target_id):
+def get_target_info(target_uid):
+    target = requests.get(f"{ARGOS_SERVER_URL}/api/v1/get_target?uid={target_uid}",
+                            headers={ 'Authorization': API_KEY},).json()
+
+    if not target['success']:
+        return None
+    return target
+
+
+def get_job_for_target(target_uid):
     jobs_raw = requests.get(f"{ARGOS_SERVER_URL}/api/v1/current_jobs", 
                                 headers={ 'Authorization': API_KEY}).json()
 
@@ -33,7 +42,7 @@ def get_job_for_target(target_id):
 
     jobs = jobs_raw['data']
     for job in jobs:
-        if job['target_id'] == target_id:
+        if job['target_uid'] == target_uid:
             return job
 
     return None
@@ -77,6 +86,7 @@ class ServerHandler(asyncio.Protocol):
         if uniq_id == anonymous:
             client_id = str(uuid.uuid4())
             clients[client_id] = {
+                'uid': client_id,
                 'display_name': data.strip('\n'),
                 'ip_addr': self.transport.get_extra_info('peername')[0]
             }
@@ -86,18 +96,30 @@ class ServerHandler(asyncio.Protocol):
                 print("[FATAL] - Error while creating new target, id returned is -1")
                 return
 
-            clients[client_id]['target_id'] = target_id
-
             self.transport.write(client_id.encode())
             self.transport.close()
-            print(f"[DEBUG] - new target created id: {target_id}")
+            print(f"[DEBUG] - new target created uid: {client_id}")
 
-        # We then look for him in our dict
-        elif (client := clients.get(uniq_id)) is not None:
+        else:
+            # We then look for him in our dict
+            client = clients.get(uniq_id)
+            # If he does not exist, we try to id him
+            if client is None:
+                client_data = get_target_info(uniq_id)['data']
+                if client_data is None:
+                    print(f"[DEBUG] - uknown target tried to contact us ({uniq_id}), ignoring.")
+                    return
+                
+                clients[uniq_id] = {
+                    'uid': uniq_id,
+                    'display_name': client_data['display_name'],
+                    'ip_addr': client_data['ip_addr']
+                }
+
             # Once we know who it is, we check what does he want
             # either pull a command (=sent only it's id) or send an output (id + output)
             if not data:
-                job = get_job_for_target(client['target_id'])
+                job = get_job_for_target(uniq_id)
                 if job is None:
                     self.transport.write(b"")
                     self.transport.close()

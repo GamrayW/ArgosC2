@@ -1,3 +1,5 @@
+<!-- rename les displayName avec un petit crayon genre pour edit -->
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -49,11 +51,14 @@
             <span class="close-button">&times;</span>
             <h2>Configurer Payload</h2>
             <select id="agents-dropdown"></select>
-            <form id="build-config-form">
-            </form>
-        </div>
-        
+            <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
+            <form id="build-config-form" action="/api/v1/build" method="post" target="dummyframe">
+                <input type="hidden" name="agent" id="hidden-agent-input">
+                <button type="submit" class="build-button">Build</button>
+            </form>                
+        </div>    
     </div>
+    
 
 </body>
 </html>

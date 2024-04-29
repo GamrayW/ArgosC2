@@ -1,0 +1,13 @@
+listeners: 
+  type: "list"
+  value: 
+    - "192.168.56.1"
+port: 
+  type: "choice"
+  value:
+    - 13337
+    - 56667
+
+sleeptime: 
+  type: "single"
+  value: 2000

