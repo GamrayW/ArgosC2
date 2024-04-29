@@ -19,6 +19,8 @@ from flask_login import (
 
 import argosdb
 
+from config import CONFIG
+
 
 APP_SECRET_KEY = 'une_cle_secrete_très_sécurisée'
 
@@ -93,27 +95,27 @@ def logout():
     :return: Redirection to login
     """
     logout_user()
-    return redirect(url_for('/'))
+    return redirect(url_for('login'))
 
 
 if __name__ == '__main__':
     import api  # TODO CHANGE THIS FUCKING THING
     argosdb.init()
 
-    test_username = "testuser"
-    test_password = "password123"
-    user_created = argosdb.register_user(test_username, test_password)
-    if user_created:
-        print(f"Test user '{test_username}' created successfully!")
-    else:
-        print(f"Test user '{test_username}' already exists.")
 
+    for operator in CONFIG['operators']:
+        user_created = argosdb.register_user(operator['username'], operator['password'])
+        if user_created:
+            print(f"Test user '{operator['username']}' created successfully!")
+        else:
+            print(f"Test user '{operator['username']}' already exists.")
+    
     print("Adding test targets")
     if argosdb.get_target_by_name('test_device') is None:
-        argosdb.add_new_target("test_device", "127.0.0.1", 1)
-        argosdb.add_new_target("esteban_pc", "41.56.235.12", 1)
-        argosdb.add_new_target("thomas_pc", "192.168.56.1", 1)
-        argosdb.add_new_target("nsa_operator😎", "256.0.0.1", 1)
+        argosdb.add_new_target("02eeb758-fb7f-4e2e-b233-ae9b6d7ce060", "test_device", "127.0.0.1", 1)
+        argosdb.add_new_target("70c1aef5-728c-400c-adc9-c4ecbdefa951", "esteban_pc", "41.56.235.12", 1)
+        argosdb.add_new_target("65f06fff-c8ad-4293-a2b4-20d58894658c", "thomas_pc", "192.168.56.1", 1)
+        argosdb.add_new_target("30937c5b-6823-43ed-bfaf-60d84bab5352", "nsa_operator😎", "256.0.0.1", 1)
 
         print("Adding last command")
         argosdb.add_new_command("echo 'h4ck3rz'", 1, 1)
@@ -132,4 +134,4 @@ if __name__ == '__main__':
     else:
         print(f"Test listner already exists.")
 
-    app.run(debug=True)
+    app.run(host=CONFIG['server']['host'], port=CONFIG['server']['port'], debug=True)

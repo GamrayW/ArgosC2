@@ -131,8 +131,115 @@ $(document).ready(function() {
         }
     }
 
+    $('#payload-btn').click(function() {
+        $.ajax({
+            url: '/api/v1/agents_list',
+            type: 'GET',
+            dataType: 'json',
+            success: function(agents) {
+                populateAgentsDropdown(agents);
+                $('#payload-modal').show();
+                if (agents.length > 0) {
+                    loadBuildConfig(agents[0]);
+                }
+            },
+            error: function(error) {
+                console.log("Error fetching agents list: ", error);
+                alert('Failed to load agents list.');
+            }
+        });
+    });
+    $(document).on('click', '.close-button', function() {
+        $('#payload-modal').hide();
+    });
+
+    $(window).click(function(event) {
+        if ($(event.target).is('#payload-modal')) {
+            $('#payload-modal').hide();
+        }
+    });
+
+    function populateAgentsDropdown(agents) {
+        var dropdown = $('#agents-dropdown');
+        dropdown.empty();
+        $.each(agents, function(index, agent) {
+            dropdown.append($('<option></option>').attr('value', agent).text(agent));
+        });
+    }
+
+    $('#agents-dropdown').change(function() {
+        var selectedAgent = $(this).val();
+        loadBuildConfig(selectedAgent);
+    });
+
+    function loadBuildConfig(agent) {
+        $.ajax({
+            url: '/api/v1/build_config',
+            type: 'GET',
+            data: { agent: agent },
+            success: function(config) {
+                populateBuildConfigForm(config);
+            },
+            error: function(error) {
+                console.log("Erreur lors de la récupération de la configuration de build : ", error);
+            }
+        });
+    }
+
+    function populateBuildConfigForm(config) {
+        var form = $('#build-config-form');
+        form.empty();
+    
+        $.each(config, function(key, settings) {
+            var formGroup = $('<div class="form-group"></div>');
+            formGroup.append(`<label>${key}</label>`);
+    
+            if (settings.type === 'list') {
+                var listContainer = $('<div class="list-container"></div>');
+                $.each(settings.value, function(index, ip) {
+                    listContainer.append(`
+                        <div class="ip-entry">
+                            <input type="text" value="${ip}">
+                            <button type="button" class="add-ip">+</button>
+                            <button type="button" class="remove-ip">-</button>
+                        </div>
+                    `);
+                });
+                formGroup.append(listContainer);
+            } else if (settings.type === 'choice') {
+                var select = $('<select></select>');
+                $.each(settings.value, function(index, port) {
+                    select.append(`<option value="${port}">${port}</option>`);
+                });
+                formGroup.append(select);
+            } else if (settings.type === 'single') {
+                formGroup.append(`<input type="text" value="${settings.value}">`);
+            }
+    
+            form.append(formGroup);
+        });
+    
+        form.append('<button type="submit">Save</button>');
+    }
+    
+    $(document).on('click', '.add-ip', function() {
+        var newEntry = $(this).parent().clone();
+        newEntry.find('input').val('');
+        $(this).parent().after(newEntry);
+    });
+    
+    $(document).on('click', '.remove-ip', function() {
+        if ($(this).parent().parent().find('.ip-entry').length > 1) {
+            $(this).parent().remove();
+        } else {
+            alert('Cannot remove the last entry.');
+        }
+    });
+    
+
     loadTargets();
     setInterval(loadTargets, 1000);
     setInterval(updateCurrentTerminal, 1000);
+    
 });
 

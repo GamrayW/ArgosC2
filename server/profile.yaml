@@ -1,17 +1,30 @@
 server:
   host: "0.0.0.0"
-  port: 40056
+  port: 5000
+
+
+postgres_server:
+  host: "127.0.0.1"
+  port: 5432
+  db_name: "argos_db"
+  db_user: "argos"
+  db_pass: "changeme"
+
+agents_path: "../agents/"
 
 build_config:
-  compiler64: "/path/to/x86_64_compiler"
-  compiler32: "/path/to/x86_compiler"
-  nasm: "/path/to/nasm"
+  compiler64: "/usr/bin/x86_64-w64-mingw32-gcc"
+
 
 operators:
   - username: "admin"
-    password: "encrypted_password"
+    password: "admin"
+
+listeners:
+  - name: "coucou"
+    api_key: "123456789"
 
 logging:
   enable_logging: true
-  log_file: "path/to/logfile.log"
+  log_file: "/tmp/logfile.log"
   log_level: "INFO"  # PEUT ETRE DES TRUCS DU STYLE 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'

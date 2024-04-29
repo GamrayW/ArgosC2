@@ -4,6 +4,9 @@
 if __name__ == "__main__":
     raise RuntimeError("This should not be run as a standalone")
 
+import os
+import yaml
+
 from __main__ import app
 from flask import (
     request
@@ -15,6 +18,8 @@ from flask_login import (
  )
 
 import argosdb
+
+from config import CONFIG
 
 
 def listener_login_required(func):
@@ -36,6 +41,45 @@ def listener_login_required(func):
         return func(listener=listener)
     wrapper_func.__name__ = func.__name__
     return wrapper_func
+
+
+@app.route('/api/v1/build_config', methods=["GET"])
+@login_required
+def build_config():
+    """
+    Retrieve the build config of an agent from the config.yaml file.
+    It gets the agent from the GET parameter "agent"
+    :return dict: the current build config
+    """
+    agent = request.args.get("agent", "default")
+    agents_dir = CONFIG['agents_path'] + "/" + agent
+
+    config_file = os.path.join(agents_dir, "config.yaml")
+    if not os.path.exists(config_file):
+        return {'error': 'the config.yaml file does not exists for the specified agent name.'}
+    
+    with open(config_file, 'r') as stream:
+        return yaml.safe_load(stream)
+
+
+@app.route('/api/v1/agents_list', methods=["GET"])
+@login_required
+def agents_list():
+    """
+    Retrieve the list of all possible agents.
+    It looks for any directory on ../agents/
+    :return list: the list of agents from fs
+    """
+    agents_dir = CONFIG['agents_path']
+    agents = [d for d in os.listdir(agents_dir) if os.path.isdir(os.path.join(agents_dir, d))]
+
+    # put default in first
+    if 'default' in agents:
+        default_index = agents.index('default')
+        agents = [agents[default_index]] + agents[:default_index] + agents[default_index+1:]
+
+    return agents
+
 
 
 @app.route('/api/v1/command_history/<target_id>', methods=["GET"])
@@ -95,14 +139,30 @@ def new_target(listener=None):
     assures us that to have a valid listener object
     post body should be like this: ip_addr=<ip>&display_name<ip>
     """
+    uid = request.form.get('uid')
     ip_addr = request.form.get('ip_addr')
     display_name = request.form.get('display_name')
-    if ip_addr is None or display_name is None:
+    if uid is None or ip_addr is None or display_name is None:
         return {'success': False, 'msg': 'ip_addr and display_name are required'}
     
-    target_id = argosdb.add_new_target(display_name, ip_addr, listener["id"])
+    target_id = argosdb.add_new_target(uid, display_name, ip_addr, listener["id"])
     return {'success': True if target_id != -1 else False, 'data': {'id': target_id}}
 
+
+@app.route('/api/v1/get_target', methods=["GET"])
+@listener_login_required
+def get_target(listener=None):
+    """
+    Hit this to retrieve target info from an uid passed as get param.
+    :return dict: target info
+    """
+    uid = request.args.get('uid')
+    targets = argosdb.get_all_targets()
+
+    for target in targets:
+        if target['uid'] == uid:
+            return {'success': True, 'data': target}
+    return {'success': False, 'data': "No target with this uid"}
 
 @app.route('/api/v1/current_jobs', methods=["GET"])
 @listener_login_required
@@ -121,6 +181,7 @@ def current_jobs(listener=None):
         jobs.append({
             'command_id': command['id'],
             'target_id': target_info['id'],
+            'target_uid': target_info['uid'],
             'target_name': target_info['display_name'],
             'target_ip': target_info['ip_addr'],
             'command': command['command']
@@ -164,9 +225,9 @@ def output(listener=None):
 
     argosdb.set_command_output(command_id, output)
 
-    target_id = argosdb.get_target_from_command_id(command_id)
+    target = argosdb.get_target_from_command_id(command_id)
 
     argosdb.update_heartbeat_listener(listener['id'])
-    argosdb.update_heartbeat_target(target_id)
+    argosdb.update_heartbeat_target(target['id'])
 
     return {'success': True, 'msg': "updated command"}

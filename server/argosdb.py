@@ -4,11 +4,12 @@ import hashlib
 from datetime import datetime
 
 
+from config import CONFIG
 # change this to go in config.py
-HOST    = ["127.0.0.1", 5432]
-DB_NAME = "argos_db"
-DB_USER = "argos"
-DB_PASS = "changeme"
+HOST    = [CONFIG['postgres_server']['host'], CONFIG['postgres_server']['port']] 
+DB_NAME = CONFIG['postgres_server']['db_name']
+DB_USER = CONFIG['postgres_server']['db_user']
+DB_PASS = CONFIG['postgres_server']['db_pass']
 
 # initiate connection with the db at the start
 connection = psycopg.connect(f"postgresql://{DB_USER}:{DB_PASS}@{HOST[0]}:{HOST[1]}/{DB_NAME}")
@@ -43,6 +44,7 @@ def create_tables():
     connection.execute("""\
     CREATE TABLE Targets (
         id SERIAL PRIMARY KEY,
+        uid VARCHAR,
         listener INTEGER,
         display_name VARCHAR,
         ip_addr VARCHAR,
@@ -85,11 +87,12 @@ def parse_listener(listener_data):
 def parse_targets(target_data):
     return {
         'id': target_data[0],
-        'listener': target_data[1],
-        'display_name': target_data[2],
-        'ip_addr': target_data[3],
-        'heartbeat': target_data[4],
-        'last_command_id': target_data[5]
+        'uid': target_data[1],
+        'listener': target_data[2],
+        'display_name': target_data[3],
+        'ip_addr': target_data[4],
+        'heartbeat': target_data[5],
+        'last_command_id': target_data[6]
     }
 
 
@@ -307,9 +310,10 @@ def get_targets_by_ip(ip_addr):
     return result
 
 
-def add_new_target(display_name, ip_addr, listener_id):
+def add_new_target(uid, display_name, ip_addr, listener_id):
     """
     Add a new target, checks for display name uniqueness
+    :param uid str: a uuidv4 used to simplify network communications
     :param display_name str: the unique display name to identify the target 
     :param ip_addr str: the ip address of the target
     :param listener_id str: the id of the lister that owns this target
@@ -317,9 +321,11 @@ def add_new_target(display_name, ip_addr, listener_id):
     """
     timestamp = int(datetime.now().timestamp())
 
-    target_id = connection.execute("INSERT INTO Targets(listener, display_name, ip_addr, heartbeat) \
-                       VALUES (%s, %s, %s, %s) RETURNING id;", (listener_id, display_name, ip_addr, timestamp)).fetchone()
+    target_id = connection.execute("INSERT INTO Targets(uid, listener, display_name, ip_addr, heartbeat) \
+                       VALUES (%s, %s, %s, %s, %s) RETURNING id;", (uid, listener_id, display_name, ip_addr, timestamp)).fetchone()
     connection.commit()
+
+    print(connection.execute("SELECT * FROM Targets").fetchall())
 
     if len(target_id) != 1:
         return -1
@@ -441,7 +447,7 @@ if __name__ == "__main__":
     print(connection.execute("SELECT * FROM Users;").fetchall())
 
     print("----------Testing Targets-----------")
-    if not add_new_target("test_device", "127.0.0.1", 1):
+    if not add_new_target("65f06fff-c8ad-4293-a2b4-20d58894658c", "test_device", "127.0.0.1", 1):
         print("test_device already registered")
 
     print(get_target_by_name("test_device"))
