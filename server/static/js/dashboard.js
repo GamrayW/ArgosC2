@@ -200,8 +200,6 @@ $(document).ready(function() {
             if (settings.type === 'list') {
                 var listContainer = $('<div class="list-container"></div>');
                 
-                var defaultValues = ""
-                                
                 $.each(settings.value, function(index, value) {
                     listContainer.append(`
                         <div class="value-entry">
@@ -210,17 +208,8 @@ $(document).ready(function() {
                             <button type="button" class="remove-value">-</button>
                         </div>
                     `);
-
-                    if (defaultValues == "") {
-                        defaultValues += value 
-                    } else {
-                        defaultValues += "," + value
-                    }
-                    
-                    console.log(defaultValues)
                 });
                 formGroup.append(listContainer);
-                listContainer.append(`<input type="hidden" id="${key}" name="${key}" value="${defaultValues}">`)
             }
              else if (settings.type === 'choice') {
                 var select = $(`<select name="${key}"></select>`); 
@@ -238,16 +227,12 @@ $(document).ready(function() {
         form.append('<button type="submit" class="build-button">Build</button>');
     }
     
-    
-    
     function sendBuildRequest() {
         var agent = $('#agents-dropdown').val();
         $('#hidden-agent-input').val(agent);
     
         document.getElementById('build-form').submit();
     }
-    
-
     
     $(document).on('click', '.add-value', function() {
         var newEntry = $(this).parent().clone();
@@ -262,7 +247,6 @@ $(document).ready(function() {
             alert('Cannot remove the last entry.');
         }
     });
-    
 
     loadTargets();
     setInterval(loadTargets, 1000);

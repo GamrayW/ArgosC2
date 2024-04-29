@@ -73,11 +73,9 @@ def build():
     agent = request.form.get("agent")
     if agent is None:
         return {'success': False, 'data': "No agent specified"}
+
+    form_data = request.form.to_dict(flat=False)
     
-
-    for el in request.form.items():
-        print(el)
-
     executable = "agent.exe"
     build_path = CONFIG["agents_path"]
     agent_dir = os.path.join(build_path, agent)
