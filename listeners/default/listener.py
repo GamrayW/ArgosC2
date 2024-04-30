@@ -3,10 +3,20 @@ import requests
 import asyncio
 import uuid
 
+from Crypto.Cipher import ARC4
+
+
+def encrypt_rc4(key, plaintext):
+    cipher = ARC4.new(key)
+    ciphertext = cipher.encrypt(plaintext)
+    return ciphertext
+
+
 
 PORT = 13337
 ARGOS_SERVER_URL = "http://127.0.0.1:5000"
 API_KEY = "123456789"
+SECRET_KEY = b"ArgosSecretKey"
 
 
 anonymous = 'f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0'
@@ -88,6 +98,11 @@ class ServerHandler(asyncio.Protocol):
         message = uncorrupt_data(data)
         message_parts = message.split(':')
         uniq_id, data = message_parts[0], ':'.join(message_parts[1:])
+
+        if message == "hello":
+            print("ok")
+            self.transport.write(encrypt_rc4(SECRET_KEY, b"hello m8"))
+            return
 
         # We first check if the agent is anonymous
         if uniq_id == anonymous:

@@ -5,22 +5,28 @@
     z-index: 1000;
     left: 0;
     top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    overflow: auto;
-    padding-top: 100px;
+    width: 100%; 
+    height: 100%; 
+    overflow-y: auto; 
+    background-color: rgba(0, 0, 0, 0.6); 
 }
+
+.modal-content h2 {
+    color: black; 
+}
+
 
 .modal-content {
     position: relative;
-    background-color: #fefefe;
-    margin: auto;
+    margin: 50px auto; 
     padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: px; /* Coins arrondis pour un look moderne */
-    width: 50%;
+    border: 1px solid #888;
+    border-radius: 5px; 
+    width: 80%; 
+    max-width: 600px; 
+    background-color: #fefefe;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    overflow-y: auto; 
     animation-name: animatetop;
     animation-duration: 0.4s;
 }
@@ -63,7 +69,7 @@
     padding: 8px 12px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    box-sizing: border-box; /* Include padding and border in width */
+    box-sizing: border-box; 
 }
 
 .add-value, .remove-value {
@@ -82,7 +88,7 @@
     background-color: #ee07c7;
 }
 
-/* Apply modern styles to submit button as well */
+
 button[type="submit"] {
     width: auto;
     padding: 10px 20px;
@@ -100,40 +106,39 @@ button[type="submit"]:hover {
 
 
 
-/* Stylisation de la liste déroulante */
+
 #agents-dropdown {
-    width: 100%; /* Pleine largeur pour s'aligner avec d'autres champs de formulaire */
-    padding: 8px 10px; /* Padding pour un meilleur aspect visuel */
-    border: 1px solid #ccc; /* Une bordure subtile */
-    border-radius: 4px; /* Coins arrondis pour un look moderne */
-    background-color: white; /* Couleur de fond pour la clarté */
-    color: #333; /* Couleur de texte foncé pour un contraste élevé */
-    font-size: 16px; /* Taille de police pour une bonne lisibilité */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Ombre discrète pour la profondeur */
-    appearance: none; /* Désactiver l'apparence par défaut du navigateur */
-    cursor: pointer; /* Indiquer que l'élément est interactif */
+    width: 100%; 
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px; 
+    background-color: white;
+    color: #333; 
+    font-size: 16px; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+    appearance: none; 
+    cursor: pointer; 
 }
 
-/* Effet au survol */
 #agents-dropdown:hover {
-    border-color: #888; /* Changer la couleur de la bordure au survol */
+    border-color: #888; 
 }
 
-/* Effet lors de la sélection */
+
 #agents-dropdown:focus {
-    outline: none; /* Supprimer le contour par défaut */
-    border-color: #555; /* Bordure plus foncée pour l'état focus */
-    box-shadow: 0 0 8px rgba(0,0,0,0.2); /* Ombre plus marquée pour l'accentuation */
+    outline: none;
+    border-color: #555; 
+    box-shadow: 0 0 8px rgba(0,0,0,0.2); 
 }
 
-/* Style des options à l'intérieur de la liste déroulante */
+
 #agents-dropdown option {
-    padding: 8px; /* Padding pour rendre les options plus faciles à sélectionner */
-    background: white; /* Fond blanc pour les options */
-    color: #333; /* Texte foncé pour un contraste élevé */
+    padding: 8px; 
+    background: white; 
+    color: #333; 
 }
 
-/* Assurez-vous que les options sont visibles dans les navigateurs qui utilisent Webkit */
+
 #agents-dropdown:-webkit-autofill,
 #agents-dropdown:-webkit-autofill:hover, 
 #agents-dropdown:-webkit-autofill:focus, 
@@ -220,54 +225,54 @@ body, html {
 
 #command-terminal {
     position: relative;
-    margin: 1rem 1rem 2rem 1rem;  /* Marges pour top, right, bottom, et left */
+    margin: 1rem 1rem 2rem 1rem;  
     padding: 1rem;
     
 }
 
 
 #active-shell {
-    color: #fff; /* Texte blanc pour contraste */
-    font-family: 'Courier New', Courier, monospace; /* Police typique de terminal */
+    color: #fff; 
+    font-family: 'Courier New', Courier, monospace; 
     border-radius: 10px;
     padding: 1rem;
-    background: rgba(0, 0, 0, 0.5); /* Semi-transparent pour correspondre à votre style */
+    background: rgba(0, 0, 0, 0.5); 
 }
 
 #shell-target {
-    white-space: nowrap; /* Empêcher le prompt de retourner à la ligne */
+    white-space: nowrap; 
 }
 
 #shell-input {
-    all: unset; /* Supprimer les styles par défaut pour l'élément éditable */
-    width: 80%;  /* Assurez-vous que la largeur est suffisante */
-    min-height: 1.5em;  /* Hauteur minimale pour faciliter le clic */
-    padding: 8px;  /* Padding suffisant pour l'interaction */
+    all: unset; 
+    width: 80%; 
+    min-height: 1.5em;  
+    padding: 8px;  
     padding-right: 80%;
     color: white;
-    outline: none;  /* Supprimer l'outline lors de la sélection */
-    cursor: text;  /* Indiquer visuellement que l'élément est éditable */
+    outline: none;  
+    cursor: text; 
 }
 
 
 #shell-input:focus {
-    outline: none; /* Pas de contour lors de la sélection */
+    outline: none; 
 }
 
 
 
 #command-history {
-    width: calc(100% - 2rem);  /* Largeur ajustée pour tenir compte des marges */
-    height: 150px;             /* Hauteur fixe pour le conteneur d'historique */
-    max-height: 300px;         /* Hauteur maximale identique à la hauteur fixe */
-    padding: 1rem;             /* Espace interne pour l'esthétique */
-    background: rgba(0, 0, 0, 0.5);  /* Couleur de fond avec transparence */
-    color: white;              /* Couleur de texte pour contraste */
-    border: none;              /* Pas de bordure */
-    border-radius: 10px;       /* Bords arrondis */
-    font-family: monospace;    /* Style de police pour l'affichage du texte de commande */
-    margin-bottom: 1rem;       /* Marge en bas pour séparation */
-    overflow-y: auto;          /* Défilement vertical activé lorsque nécessaire */
+    width: calc(100% - 2rem);  
+    height: 150px;             
+    max-height: 300px;         
+    padding: 1rem;             
+    background: rgba(0, 0, 0, 0.5);  
+    color: white;              
+    border: none;              
+    border-radius: 10px;       
+    font-family: monospace;    
+    margin-bottom: 1rem;       
+    overflow-y: auto;          
 }
 
 .command-response {
@@ -280,6 +285,8 @@ body, html {
 #command-input:focus {
     outline: none;
 }
+
+
 
 #send-command-btn {
     width: 100%;

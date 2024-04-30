@@ -3,6 +3,8 @@
 #include <winsock2.h>
 #include <windows.h>
 
+#include "rc4.h"
+
 
 #ifndef LISTENERS
 #define LISTENERS {"127.0.0.1", "192.168.56.1"}
@@ -18,6 +20,10 @@
 
 #ifndef SLEEPTIME
 #define SLEEPTIME 2000
+#endif
+
+#ifndef SECRETKEY
+#define SECRETKEY "ArgosSecretKey"
 #endif
 
 #define LEN_MSG 512
@@ -186,7 +192,6 @@ int main() {
             printf("Error while introducing ourselves. (%d) Retrying", error);
         }
     }
-    
 
     free(hostname_h);
     hostname_h = NULL;

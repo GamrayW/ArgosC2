@@ -18,4 +18,4 @@ CC = /usr/bin/x86_64-w64-mingw32-gcc
 
 
 default:
-	$(CC) -std=c11 -o $(out) -DLISTENERS_AMOUNT=$(LISTENERS_AMOUNT) -DLISTENERS="$(LISTENERS)" -DPORT=$(PORT) -DSLEEPTIME=$(SLEEPTIME) main.c -lwsock32 -lws2_32
+	$(CC) -std=c11 -o $(out) -DLISTENERS_AMOUNT=$(LISTENERS_AMOUNT) -DLISTENERS="$(LISTENERS)" -DPORT=$(PORT) -DSLEEPTIME=$(SLEEPTIME) main.c rc4.c -lwsock32 -lws2_32
