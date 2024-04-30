@@ -39,10 +39,8 @@ SOCKET connectToServer() {
         return SOCKET_ERROR;
     }
 
-    printf("%d amount\n", LISTENERS_AMOUNT);
     char hosts[LISTENERS_AMOUNT][15] = LISTENERS;
     int randomHost = rand() % LISTENERS_AMOUNT;
-    printf("Using host: %d (%s)\n", randomHost, hosts[randomHost]);
 
     serverHost.sin_family = AF_INET;
     serverHost.sin_port = htons(PORT);  // to little endian

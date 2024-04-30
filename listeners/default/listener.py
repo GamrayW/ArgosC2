@@ -1,5 +1,4 @@
 # TODO what happens when multiple commands are in the pipeline not yet pulled ?
-# TODO: make heartbeat when agent reach
 import requests
 import asyncio
 import uuid
@@ -55,9 +54,16 @@ def send_command_output(command_id, output):
         "output": output
     }
     response = requests.post(f"{ARGOS_SERVER_URL}/api/v1/output", 
-                                headers={ 'Authorization': API_KEY},
+                                headers={ 'Authorization': API_KEY },
                                 data=data).json()
     print(response)
+
+
+def heartbeat(target_uid):
+    data = { 'target_uid': target_uid }
+    requests.post(f"{ARGOS_SERVER_URL}/api/v1/heartbeat",
+                  headers={ 'Authorization': API_KEY },
+                  data=data)
 
 
 def uncorrupt_data(data):
@@ -119,6 +125,7 @@ class ServerHandler(asyncio.Protocol):
 
             # Once we know who it is, we check what does he want
             # either pull a command (=sent only it's id) or send an output (id + output)
+            heartbeat(uniq_id)
             if not data:
                 job = get_job_for_target(uniq_id)
                 if job is None:

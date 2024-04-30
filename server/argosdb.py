@@ -334,14 +334,14 @@ def add_new_target(uid, display_name, ip_addr, listener_id):
     return target_id[0]
 
 
-def update_heartbeat_target(target_id):
+def update_heartbeat_target(target_uid):
     """
     Change the heartbeat timestamp of the target to current time
-    :param target_id int: the id of the target
+    :param target_uid str: the uid of the target
     """
     timestamp = int(datetime.now().timestamp())
 
-    connection.execute("UPDATE Targets SET heartbeat = %s WHERE id = %s", (timestamp, target_id))
+    connection.execute("UPDATE Targets SET heartbeat = %s WHERE uid = %s", (timestamp, target_uid))
     connection.commit()
 
 

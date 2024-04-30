@@ -223,7 +223,7 @@ def current_jobs(listener=None):
     agents.
     Takes a listener as parameter that comes from the listener_login_required, that
     assures us that to have a valid listener object
-    :return [dict]: {'id': <int>, 'target_id': int, 'ip_addr': <str>, 'command': <str>}
+    :return [dict]: {'id': <int>, 'target_id': int, 'target_uid': uuid4, 'ip_addr': <str>, 'command': <str>}
     """
     commands = argosdb.get_all_active_commands_for_listener(listener['id'])
     jobs = []
@@ -248,14 +248,14 @@ def heartbeat_(listener=None):
     Give life signs from agent/listener.
     Takes a listener as parameter that comes from the listener_login_required, that
     assures us that to have a valid listener object
-    body params: target_id=<int>
+    body params: target_uid=uid4
     """
-    target_id = request.form.get('target_id')
-    if target_id is None:
+    target_uid = request.form.get('target_uid')
+    if target_uid is None:
         return {'success': False, 'data': 'target_id required'}
 
     argosdb.update_heartbeat_listener(listener['id'])
-    argosdb.update_heartbeat_target(target_id)
+    argosdb.update_heartbeat_target(target_uid)
     return {'success': True, 'data': "updated heartbeats"}
 
 
@@ -280,6 +280,6 @@ def output(listener=None):
     target = argosdb.get_target_from_command_id(command_id)
 
     argosdb.update_heartbeat_listener(listener['id'])
-    argosdb.update_heartbeat_target(target['id'])
+    argosdb.update_heartbeat_target(target['uid'])
 
     return {'success': True, 'data': "updated command"}
