@@ -106,15 +106,15 @@ if __name__ == '__main__':
     for operator in CONFIG['operators']:
         user_created = argosdb.register_user(operator['username'], operator['password'])
         if user_created:
-            print(f"Test user '{operator['username']}' created successfully!")
+            print(f"User '{operator['username']}' created successfully!")
         else:
-            print(f"Test user '{operator['username']}' already exists.")
+            print(f"User '{operator['username']}' already exists.")
     
     for listener in CONFIG['listeners']:
         listener_created = argosdb.add_listener(listener['name'], listener['api_key'])
         if listener_created:
-            print(f"Test listener created successfully!")
+            print(f"Listener {listener['name']} created successfully!")
         else:
-            print(f"Test listner already exists.")
+            print(f"Listener {listener['name']} already exists.")
 
     app.run(host=CONFIG['server']['host'], port=CONFIG['server']['port'], debug=True)

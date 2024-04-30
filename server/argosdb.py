@@ -218,6 +218,7 @@ def add_listener(name, api_key):
     Add a new listener to the database.
     :param name str: the unique name used to identify the listener
     :param api_key str: the clear text api key used to authentificate the listener
+    :return bool: if the listerner already exist, we don't make it and return False
     """
     api_key_hash = hashlib.sha512(api_key.encode()).hexdigest()
     user = get_listener(name)
@@ -354,7 +355,7 @@ def get_user_last_command_on_target(target_id, user_id):
     """
     last_command = connection.execute("SELECT * FROM Commands WHERE executed_on = %s\
                                    AND owner = %s;", (target_id, user_id)).fetchone()
-    if last_command == None:
+    if last_command is None:
         return None
 
     return parse_command(last_command)
@@ -399,7 +400,6 @@ def set_command_output(command_id, output):
     :return int: err code
     """
     is_already_complete = connection.execute("SELECT * FROM Commands WHERE id = %s AND completed", (command_id,)).fetchone()
-    print(is_already_complete)
     if is_already_complete is not None:
         return -1
     

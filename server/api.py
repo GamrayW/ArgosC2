@@ -1,5 +1,3 @@
-# TODO handle db errors
-# TODO make normalized responses
 # TODO make them function blueprints
 if __name__ == "__main__":
     raise RuntimeError("This should not be run as a standalone")
@@ -276,7 +274,8 @@ def output(listener=None):
     if command_id is None or output is None:
         return {'success': False, 'data': 'command_id and output required'}
 
-    argosdb.set_command_output(command_id, output)
+    if argosdb.set_command_output(command_id, output) == -1:
+        return {'success': False, 'data': 'command already completed'}
 
     target = argosdb.get_target_from_command_id(command_id)
 
