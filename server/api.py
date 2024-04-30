@@ -58,10 +58,10 @@ def build_config():
 
     config_file = os.path.join(agents_dir, "config.yaml")
     if not os.path.exists(config_file):
-        return {'error': 'the config.yaml file does not exists for the specified agent name.'}
+        return {'success': False, 'data': 'the config.yaml file does not exists for the specified agent name.'}
     
     with open(config_file, 'r') as stream:
-        return yaml.safe_load(stream)
+        return {'success': True, 'data': yaml.safe_load(stream)}
     
 
 # TODO: improve build process
@@ -85,7 +85,7 @@ def build():
 
     config_file = os.path.join(agents_dir, "config.yaml")
     if not os.path.exists(config_file):
-        return {'error': 'the config.yaml file does not exists for the specified agent name.'}
+        return {'success': False, 'data': 'the config.yaml file does not exists for the specified agent name.'}
     
     with open(config_file, 'r') as stream:
         build_config = yaml.safe_load(stream)
@@ -94,7 +94,7 @@ def build():
     for param in build_config:
         user_conf = form_data.get(param)
         if user_conf is None:
-            return {'error': f'parameter {param} was not supplied.'}
+            return {'success': False, 'data': f'parameter {param} was not supplied.'}
         
         if build_config[param]['type'] == "list":
             list_value = "{"
@@ -108,7 +108,7 @@ def build():
     with subprocess.Popen(command, stdout=subprocess.PIPE, encoding='utf-8', cwd=agents_dir) as process:
         outs, errs = process.communicate(timeout=5)
         if process.returncode != 0:
-            return {'success': False, 'msg': f"{process.returncode},{errs}"}
+            return {'success': False, 'data': f"{process.returncode},{errs}"}
         
         print(f'Command {process.args} exited with {process.returncode} code ({errs}), output: \n{outs}')
 
@@ -131,7 +131,7 @@ def agents_list():
         default_index = agents.index('default')
         agents = [agents[default_index]] + agents[:default_index] + agents[default_index+1:]
 
-    return agents
+    return {'success': True, 'data': agents}
 
 
 @app.route('/api/v1/command_history/<target_id>', methods=["GET"])
@@ -145,8 +145,8 @@ def command_history(target_id=-1):
     """
     commands = argosdb.get_user_command_history_of_target(target_id, current_user.id)
     if commands == None:
-        return {'success': False, 'msg': "No command on this target"}
-    return commands
+        return {'success': False, 'data': "No command on this target"}
+    return {'success': True, 'data': commands}
 
 
 @app.route('/api/v1/send_command/<target_id>', methods=["POST"])
@@ -159,13 +159,13 @@ def send_command(target_id=-1):
     """
     command = request.form.get('cmd')
     if command is None:
-        return {'success': False, 'msg': "No 'cmd' provided"}
+        return {'success': False, 'data': "No 'cmd' provided"}
     
     if argosdb.get_target_by_id(target_id) is None:
-        return {'success': False, 'msg': "target_id seems incorrect"}
+        return {'success': False, 'data': "target_id seems incorrect"}
     
     argosdb.add_new_command(command, target_id, current_user.id)
-    return {'success': True, 'msg': ""}
+    return {'success': True, 'data': ""}
 
 
 @app.route('/api/v1/targets', methods=["GET"])
@@ -176,7 +176,7 @@ def targets():
     :return [dict]: the list of targets (see db schema for dict structure)
     """
     targets = argosdb.get_all_targets()
-    return targets
+    return {'success': True, 'data': targets}
 
 
 # # Listener functions are not using the @login_required since listeners
@@ -195,7 +195,7 @@ def new_target(listener=None):
     ip_addr = request.form.get('ip_addr')
     display_name = request.form.get('display_name')
     if uid is None or ip_addr is None or display_name is None:
-        return {'success': False, 'msg': 'ip_addr and display_name are required'}
+        return {'success': False, 'data': 'ip_addr and display_name are required'}
     
     target_id = argosdb.add_new_target(uid, display_name, ip_addr, listener["id"])
     return {'success': True if target_id != -1 else False, 'data': {'id': target_id}}
@@ -254,11 +254,11 @@ def heartbeat_(listener=None):
     """
     target_id = request.form.get('target_id')
     if target_id is None:
-        return {'success': False, 'msg': 'target_id required'}
+        return {'success': False, 'data': 'target_id required'}
 
     argosdb.update_heartbeat_listener(listener['id'])
     argosdb.update_heartbeat_target(target_id)
-    return {'success': True, 'msg': "updated heartbeats"}
+    return {'success': True, 'data': "updated heartbeats"}
 
 
 @app.route('/api/v1/output', methods=["POST"])
@@ -274,7 +274,7 @@ def output(listener=None):
     output = request.form.get('output')
 
     if command_id is None or output is None:
-        return {'success': False, 'msg': 'command_id and output required'}
+        return {'success': False, 'data': 'command_id and output required'}
 
     argosdb.set_command_output(command_id, output)
 
@@ -283,4 +283,4 @@ def output(listener=None):
     argosdb.update_heartbeat_listener(listener['id'])
     argosdb.update_heartbeat_target(target['id'])
 
-    return {'success': True, 'msg': "updated command"}
+    return {'success': True, 'data': "updated command"}

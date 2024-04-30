@@ -31,7 +31,7 @@ $(document).ready(function() {
                     var ip = shellText.substring(shellText.indexOf('@') + 1, shellText.indexOf(' $'));
                     loadCommandHistory(targetId, hostname, ip);
                 } else {
-                    alert('Failed to send command: ' + response.msg);
+                    alert('Failed to send command: ' + response.data);
                 }
             },
             error: function(xhr, status, error) {
@@ -47,9 +47,15 @@ $(document).ready(function() {
             url: '/api/v1/targets',
             type: 'GET',
             dataType: 'json',
-            success: function(targets) {
-                updateTargetsPanel(targets);
-                updateTargetsList(targets);
+            success: function(response) {
+                if (response.success) {
+                    let targets = response.data;
+                    updateTargetsPanel(targets);
+                    updateTargetsList(targets);
+                } else {
+                    console.log("Error retrieving targets: ", response.data);
+                }
+
             },
             error: function(error) {
                 console.log("Error fetching targets: ", error);
@@ -102,8 +108,14 @@ $(document).ready(function() {
             url: '/api/v1/command_history/' + targetId,
             type: 'GET',
             dataType: 'json',
-            success: function(commands) {
-                updateCommandTerminal(commands, hostname, ip); 
+            success: function(response) {
+                if (response.success) {
+                    let commands = response.data
+                    updateCommandTerminal(commands, hostname, ip); 
+                } else {
+                    console.log("Error retrieving command history: ", response.data)
+                }
+                
             },
             error: function(error) {
                 console.log("Error retrieving order history: ", error);
@@ -136,12 +148,18 @@ $(document).ready(function() {
             url: '/api/v1/agents_list',
             type: 'GET',
             dataType: 'json',
-            success: function(agents) {
-                populateAgentsDropdown(agents);
-                $('#payload-modal').show();
-                if (agents.length > 0) {
-                    loadBuildConfig(agents[0]);
+            success: function(response) {
+                if (response.success) {
+                    let agents = response.data
+                    populateAgentsDropdown(agents);
+                    $('#payload-modal').show();
+                    if (agents.length > 0) {
+                        loadBuildConfig(agents[0]);
+                    }
+                } else {
+                    console.log("Error getting agent list")
                 }
+                
             },
             error: function(error) {
                 console.log("Error fetching agents list: ", error);
@@ -178,8 +196,13 @@ $(document).ready(function() {
             url: '/api/v1/build_config',
             type: 'GET',
             data: { agent: agent },
-            success: function(config) {
-                populateBuildConfigForm(config, agent);
+            success: function(response) {
+                if (response.success) {
+                    populateBuildConfigForm(response.data, agent);
+                } else {
+                    console.log("Error while retrieving build configuration: ", response.data);
+                }
+                
             },
             error: function(error) {
                 console.log("Error retrieving build configuration:", error);

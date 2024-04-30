@@ -1,4 +1,5 @@
 # TODO what happens when multiple commands are in the pipeline not yet pulled ?
+# TODO: make heartbeat when agent reach
 import requests
 import asyncio
 import uuid
