@@ -12,9 +12,6 @@ postgres_server:
 
 agents_path: "../agents/"
 
-build_config:
-  compiler64: "/usr/bin/x86_64-w64-mingw32-gcc"
-
 
 operators:
   - username: "admin"

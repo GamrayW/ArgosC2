@@ -4,17 +4,12 @@
 #include <windows.h>
 
 
-
-#ifndef HOST
-#define HOST "127.0.0.1"
+#ifndef LISTENERS
+#define LISTENERS {"127.0.0.1", "192.168.56.1"}
 #endif
 
-#ifndef HOSTS
-#define HOSTS {"127.0.0.1", "192.168.56.1"}
-#endif
-
-#ifndef HOST_AMOUNT
-#define HOST_AMOUNT 2
+#ifndef LISTENERS_AMOUNT
+#define LISTENERS_AMOUNT 2
 #endif
 
 #ifndef PORT
@@ -44,8 +39,9 @@ SOCKET connectToServer() {
         return SOCKET_ERROR;
     }
 
-    char hosts[HOST_AMOUNT][15] = HOSTS;
-    int randomHost = rand() % HOST_AMOUNT;
+    printf("%d amount\n", LISTENERS_AMOUNT);
+    char hosts[LISTENERS_AMOUNT][15] = LISTENERS;
+    int randomHost = rand() % LISTENERS_AMOUNT;
     printf("Using host: %d (%s)\n", randomHost, hosts[randomHost]);
 
     serverHost.sin_family = AF_INET;

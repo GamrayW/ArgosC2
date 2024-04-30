@@ -1,13 +1,13 @@
-listeners: 
+LISTENERS: 
   type: "list"
   value: 
     - "192.168.56.1"
-port: 
+PORT: 
   type: "choice"
   value:
     - 13337
     - 56667
 
-sleeptime: 
+SLEEPTIME: 
   type: "single"
   value: 2000

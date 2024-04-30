@@ -6,6 +6,7 @@ if __name__ == "__main__":
 
 import os
 import yaml
+import subprocess
 
 from __main__ import app
 from flask import (
@@ -63,12 +64,14 @@ def build_config():
         return yaml.safe_load(stream)
     
 
+# TODO: improve build process
 @app.route('/api/v1/build', methods=['POST'])
 @login_required
 def build():
     """
     Build an agent and send the binary to the client.
     post body should have the build parameters and the agent name.
+    returns the compiled file
     """
     agent = request.form.get("agent")
     if agent is None:
@@ -78,10 +81,38 @@ def build():
     
     executable = "agent.exe"
     build_path = CONFIG["agents_path"]
-    agent_dir = os.path.join(build_path, agent)
+    agents_dir = os.path.join(build_path, agent)
 
-    print(request.form, agent_dir)
-    return send_from_directory(agent_dir, executable)
+    config_file = os.path.join(agents_dir, "config.yaml")
+    if not os.path.exists(config_file):
+        return {'error': 'the config.yaml file does not exists for the specified agent name.'}
+    
+    with open(config_file, 'r') as stream:
+        build_config = yaml.safe_load(stream)
+
+    command = ["make"]
+    for param in build_config:
+        user_conf = form_data.get(param)
+        if user_conf is None:
+            return {'error': f'parameter {param} was not supplied.'}
+        
+        if build_config[param]['type'] == "list":
+            list_value = "{"
+            for value in user_conf:
+                list_value += f'\\"{value}\\",'
+            list_value = list_value[:-1] + "}"
+            user_conf = [list_value]
+        
+        command.append(f"{param}={user_conf[0]}")
+        
+    with subprocess.Popen(command, stdout=subprocess.PIPE, encoding='utf-8', cwd=agents_dir) as process:
+        outs, errs = process.communicate(timeout=5)
+        if process.returncode != 0:
+            return {'success': False, 'msg': f"{process.returncode},{errs}"}
+        
+        print(f'Command {process.args} exited with {process.returncode} code ({errs}), output: \n{outs}')
+
+    return send_from_directory(agents_dir, executable)
 
 
 @app.route('/api/v1/agents_list', methods=["GET"])

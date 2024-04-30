@@ -203,7 +203,7 @@ $(document).ready(function() {
                 $.each(settings.value, function(index, value) {
                     listContainer.append(`
                         <div class="value-entry">
-                            <input type="text" name="${key}[]" value="${value}" class="value-input">
+                            <input type="text" name="${key}" value="${value}" class="value-input">
                             <button type="button" class="add-value">+</button>
                             <button type="button" class="remove-value">-</button>
                         </div>
