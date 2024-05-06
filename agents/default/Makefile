@@ -7,7 +7,7 @@ ifndef PORT
 endif
 
 ifndef SLEEPTIME
-	SLEEPTIME=2000
+	SLEEPTIME=3000
 endif
 
 ifndef SECRETKEY

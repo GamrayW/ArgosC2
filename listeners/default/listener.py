@@ -16,7 +16,7 @@ def encrypt_rc4(key, plaintext):
 PORT = 13337
 ARGOS_SERVER_URL = "http://127.0.0.1:5000"
 API_KEY = "123456789"
-SECRET_KEY = b"ArgosRc4Key!!"
+SECRET_KEY = b"ArgosRc4Key"
 
 
 anonymous = 'f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0'
