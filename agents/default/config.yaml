@@ -8,6 +8,10 @@ PORT:
     - 13337
     - 56667
 
+SECRETKEY:
+  type: "single"
+  value: "ArgosRc4Key"
+
 SLEEPTIME: 
   type: "single"
   value: 2000

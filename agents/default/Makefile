@@ -10,6 +10,10 @@ ifndef SLEEPTIME
 	SLEEPTIME=2000
 endif
 
+ifndef SECRETKEY
+	SECRETKEY="ArgosRc4Key"
+endif
+
 LISTENERS_AMOUNT := $(shell echo $(LISTENERS) | tr -cd ',' | wc -c)
 LISTENERS_AMOUNT := $(shell echo $$(($(LISTENERS_AMOUNT) + 1)))
 
@@ -18,4 +22,4 @@ CC = /usr/bin/x86_64-w64-mingw32-gcc
 
 
 default:
-	$(CC) -std=c11 -o $(out) -DLISTENERS_AMOUNT=$(LISTENERS_AMOUNT) -DLISTENERS="$(LISTENERS)" -DPORT=$(PORT) -DSLEEPTIME=$(SLEEPTIME) main.c rc4.c -lwsock32 -lws2_32
+	$(CC) -std=c11 -o $(out) -DLISTENERS_AMOUNT=$(LISTENERS_AMOUNT) -DLISTENERS="$(LISTENERS)" -DPORT=$(PORT) -DSECRETKEY="\"$(SECRETKEY)\"" -DSLEEPTIME=$(SLEEPTIME) main.c -lwsock32 -lws2_32
