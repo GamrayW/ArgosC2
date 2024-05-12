@@ -19,7 +19,7 @@ LISTENERS_AMOUNT := $(shell echo $$(($(LISTENERS_AMOUNT) + 1)))
 
 out = agent.exe
 CC = /usr/bin/x86_64-w64-mingw32-gcc
-
+opts = -s -DNDEBUG
 
 default:
-	$(CC) -std=c11 -o $(out) -DLISTENERS_AMOUNT=$(LISTENERS_AMOUNT) -DLISTENERS="$(LISTENERS)" -DPORT=$(PORT) -DSECRETKEY="\"$(SECRETKEY)\"" -DSLEEPTIME=$(SLEEPTIME) main.c -lwsock32 -lws2_32
+	$(CC) -std=c11 -o $(out) $(opts) -DLISTENERS_AMOUNT=$(LISTENERS_AMOUNT) -DLISTENERS="$(LISTENERS)" -DPORT=$(PORT) -DSECRETKEY="\"$(SECRETKEY)\"" -DSLEEPTIME=$(SLEEPTIME) main.c -lwsock32 -lws2_32
