@@ -171,7 +171,7 @@ int sendAndGetResponse(char* sendData, char* response) {
         return WSAGetLastError();
     }
 
-    Sleep(10);  // Sleeping for 10 milliseconds to let the tcp connection complete before reading
+    Sleep(100);  // Sleeping for 10 milliseconds to let the tcp connection complete before reading
 
     int readBytes = recv(serverFd, response, LEN_MSG, 0);
     if (readBytes < 0) {
@@ -251,6 +251,7 @@ int main() {
             new_id[0] = 0x00;
             continue;
         }
+        Sleep(1000);
     }
 
     strncpy(agent_id, new_id, LEN_ID);
