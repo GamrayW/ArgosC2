@@ -171,7 +171,7 @@ int sendAndGetResponse(char* sendData, char* response) {
         return WSAGetLastError();
     }
 
-    Sleep(100);  // Sleeping for 10 milliseconds to let the tcp connection complete before reading
+    Sleep(1000);  // Sleeping for 1 second to let the tcp connection complete before reading
 
     int readBytes = recv(serverFd, response, LEN_MSG, 0);
     if (readBytes < 0) {
