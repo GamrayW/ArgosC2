@@ -81,9 +81,10 @@ SOCKET connectToServer() {
         return SOCKET_ERROR;
     }
 
-    char hosts[LISTENERS_AMOUNT][15] = LISTENERS;
+    char hosts[LISTENERS_AMOUNT][16] = LISTENERS;
     int randomHost = rand() % LISTENERS_AMOUNT;
 
+    printf("\nChoose %s for this exchange.\n", hosts[randomHost]);
     serverHost.sin_family = AF_INET;
     serverHost.sin_port = htons(PORT);  // to little endian
     serverHost.sin_addr.s_addr = inet_addr(hosts[randomHost]);
