@@ -41,6 +41,7 @@ Here's what an operator, once logged-in with the credentials specified in the se
 When new agents connects, they are added to the list in the top of the screen an can be selected individually to run commands.
 
 From this view, the operator can build new agents executable and modify their configuration after having selected the desired agent:
+
 ![](./img/buildcfg.png)
 
 This configuration comes from the config.yaml file of the default agent:
