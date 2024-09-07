@@ -14,7 +14,7 @@ def encrypt_rc4(key, plaintext):
 
 
 PORT = 13337
-ARGOS_SERVER_URL = "http://127.0.0.1:5000"
+ARGOS_SERVER_URL = "http://gamray.re:5000"
 API_KEY = "123456789"
 SECRET_KEY = b"ArgosRc4Key"
 
@@ -107,13 +107,13 @@ class ServerHandler(asyncio.Protocol):
                 'display_name': data.strip('\n'),
                 'ip_addr': self.transport.get_extra_info('peername')[0]
             }
-
+            print(f"client is anonymous {uniq_id}")
             target_id = argos_create_new_target(clients[client_id])
             if target_id == -1:
                 print("[FATAL] - Error while creating new target, id returned is -1")
                 return
 
-            print("sending id")
+            print(f"response received, client is {target_id}, sending id to client")
             self.transport.write(encrypt_rc4(SECRET_KEY, client_id.encode()))
             self.transport.close()
             print(f"[DEBUG] - new target created uid: {client_id}")
